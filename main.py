@@ -1,6 +1,7 @@
 import requests, re
 from fastapi import FastAPI, Form, BackgroundTasks
 from bs4 import BeautifulSoup
+from datetime import datetime
 
 def get_int(string):
     return int(re.search(r'(\d+)', string).group(1))
@@ -59,22 +60,22 @@ class User:
         #print("gen_cookie(): new cookie '{0}'".format(self.wsid))
         return "WSID={0}; WUID={0}".format(self.wsid)
 
-    def get_bests(self):
+    def get_personal_bests(self):
         print("Getting song list...")
         self.response = requests.request("GET", "https://wacca.marv-games.jp/web/music", headers = { "Cookie": self.gen_cookie() })
         
         soup = BeautifulSoup(self.response.text, 'html.parser')
         
         # Get song data from song list
-        songlist = soup.find_all("form",attrs={"name": re.compile("detail")}, limit=40)
+        songlist = soup.find_all("form",attrs={"name": re.compile("detail")}, limit=10)
 
         self.personal_bests_total = len(songlist)
 
         print("Getting song data for {0} songs...".format(self.personal_bests_total))
         for song in songlist:
-            self.personal_bests.append(self.scrape_best(PersonalBest(int(song.input["value"]), song.parent.a.div.div.string)))
+            self.personal_bests.append(self.scrape_personal_best(PersonalBest(int(song.input["value"]), song.parent.a.div.div.string)))
 
-    def scrape_best(self, song):
+    def scrape_personal_best(self, song):
         print("* <{0}> [{1}] ".format(song.id, song.name), end='')
 
         url = "https://wacca.marv-games.jp/web/music/detail"
@@ -98,13 +99,6 @@ class User:
             
             # difficulty name
             # print(diff.select_one(".song-info__top__lv > div").text)
-
-            '''
-            {'id': 2070, 'name': 'KALACAKLA', 'total_plays': 8, 'difficulties': [<main.DifficultyStats object at 0x10ad871f0>, <main.DifficultyStats object at 0x10ad87c10>, <main.DifficultyStats object at 0x10ad87370>]}
-            {'score': 0, 'rate': 'no_rate', 'achieve': 'no_achieve', 'play_count': 0}
-            {'score': 994595, 'rate': 'rate_13', 'achieve': 'achieve3', 'play_count': 1}
-            {'score': 983269, 'rate': 'rate_9', 'achieve': 'achieve2', 'play_count': 7}
-            '''
             
             # difficulty rate and achieve
             icons = diff.select(".score-detail__icon > div > img")
@@ -130,25 +124,28 @@ class User:
         #for diff in song.difficulties:
         #    print(diff.__dict__)
 
-    def get_recentplays(self):
+    def get_recent_plays(self):
         print("Getting recent plays...")
         self.response = requests.request("GET", "https://wacca.marv-games.jp/web/history", headers = { "Cookie": self.gen_cookie() })
 
         soup = BeautifulSoup(self.response.text, 'html.parser')
 
         # Get song data from song list
-        recentlist = soup.search(".playdata__history-list__wrap > li")
+        recentlist = soup.select(".playdata__history-list__wrap > li")
         for song in recentlist:
-            time = song.search(".playdata__history-list__song-info__top").span.decompose()
-            timestamp = datetime.strptime(time,'%Y/%m/%d %H:%M:%S')
-            print(timestamp)
+            time = song.select_one(".playdata__history-list__song-info__top")
+            time.span.decompose()
+            timestamp = datetime.strptime(time.text,'%Y/%m/%d %H:%M:%S')
+            print(timestamp) # TODO: Normalize to UTC
+
             # recent = RecentPlay()
 
             # self.recents.append()
 
 
     def scrape(self):
-        self.get_bests()
+        #self.get_personal_bests()
+        self.get_recent_plays()
 
     def progress(self):
         return Progress(self.personal_bests_total, len(self.personal_bests))
@@ -174,9 +171,9 @@ async def root(aimeId: str = Form(), background_tasks: BackgroundTasks = Backgro
 
     return "Success"
 
-@app.get("/getProgress/")
+@app.get("/getProgress")
 async def get_progress(aimeId: str):
     if aimeId in users.keys():
         return users[aimeId].progress()
     else:
-        return "User not found"
+        return {"error": "User not found"}
