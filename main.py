@@ -56,6 +56,7 @@ class RecentPlay(Song):
         self.max_combo = max_combo
 
 class User:
+    name = ""
     wsid = ""
     response = ""
     personal_bests = []
@@ -72,6 +73,19 @@ class User:
         self.wsid = re.search(r'WSID=(\w+);', self.response.headers["Set-Cookie"]).group(1)
         #print("gen_cookie(): new cookie '{0}'".format(self.wsid))
         return "WSID={0}; WUID={0}".format(self.wsid)
+
+    def get_user_info(self):
+        self.response = requests.request("GET", "https://wacca.marv-games.jp/web/top", headers = { "Cookie": self.gen_cookie() })
+
+        soup = BeautifulSoup(self.response.text, 'html.parser')
+
+        self.name = soup.select_one('.user-info__detail__name').text
+        self.level = soup.select_one('.user-info__detail__lv > span').text.replace("Lv.", "")
+        self.ex = soup.select_one('.user-info__detail__ex').text
+        self.rate = soup.select_one('.rating__data').text
+        self.rp = soup.select_one('.user-info__detail__wp').text.replace(" RP", "")
+        self.icon = soup.select_one('.icon__image > img')["src"]
+        self.title = soup.select_one('.user-info__detail__title').text
 
     def get_personal_bests(self):
         print("Getting song list...")
@@ -173,6 +187,7 @@ class User:
 
 
     def scrape(self):
+        self.get_user_info()
         self.get_personal_bests()
         self.get_recent_plays()
 
@@ -206,6 +221,13 @@ async def scrape(userId: str = Form(), background_tasks: BackgroundTasks = Backg
 async def get_progress(id: str):
     if id in users.keys():
         return users[id].progress()
+    else:
+        return {"error": "User not found"}
+
+@app.get("/api/getName")
+async def get_name(id: str):
+    if id in users.keys():
+        return users[id].name
     else:
         return {"error": "User not found"}
 

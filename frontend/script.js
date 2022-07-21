@@ -39,6 +39,10 @@ function updateProgress(userId) {
       bests.setText(progressJson.bests_completed + "/" + progressJson.bests_total)
       bests.animate(progressJson.bests_completed / progressJson.bests_total)
       if(progressJson.bests_completed == progressJson.bests_total) {
+        bests.setText('Completed!')
+        document.getElementById("progress-container").classList.add("hidden")
+        setTimeout(function(){document.getElementById("ui").classList.add("visible")}, 1000)
+        
         clearInterval(updateInterval)
       }
     }

@@ -12,7 +12,7 @@
         background-image: url("/static/assets/pattern.png");
       }
 
-      .progress-container {
+      #progress-container {
         font-family: "Raleway", Helvetica, sans-serif;
         font-size: 1.2rem;
 
@@ -42,20 +42,46 @@
         transform: translate(-50%, -50%);
       }
 
+      .hidden {
+        visibility: hidden !important;
+        opacity: 0 !important;
+        transition: visibility 0s 2s, opacity 2s cubic-bezier(0.95, 0.05, 0.795, 0.035) !important;
+      }
+
+      .visible {
+        opacity: 1 !important;
+        transition: visibility 0s 2s, opacity 2s cubic-bezier(0.95, 0.05, 0.795, 0.035) !important;
+      }
+
+      #ui {
+        width: 400px;
+        height: 600px;
+        background-color: #555;
+
+        margin-left: auto;
+        margin-right: auto;
+
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        opacity: 0;
+      }
+
   </style>
 </head>
 
 <body>
-  <div class="progress-container">
+  <div id="progress-container">
     Progress
     <div class="progress-circle" id="progress1"></div>
   </div>
+  
+  <div id="ui">
+    
+  </div>
 
-<!--  <div class="progress-container">-->
-<!--    Test-->
-<!--    <div class="progress-circle" id="progress2"></div>-->
-<!--  </div>-->
-
+  
 
   <script src="https://cdn.rawgit.com/kimmobrunfeldt/progressbar.js/1.0.1/dist/progressbar.js"></script>
   <script src="/static/script.js"></script>
