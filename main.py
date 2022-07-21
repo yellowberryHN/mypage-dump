@@ -1,7 +1,7 @@
 import requests, re, time
 from fastapi import FastAPI, Form, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import RedirectResponse, Response
+from fastapi.responses import RedirectResponse, Response, HTMLResponse
 from jsmin import jsmin
 from bs4 import BeautifulSoup
 
@@ -160,7 +160,7 @@ class User:
 
 
     def scrape(self):
-        #self.get_personal_bests()
+        self.get_personal_bests()
         self.get_recent_plays()
 
     def progress(self):
@@ -187,8 +187,7 @@ def scrape_background(aimeId):
 async def scrape(aimeId: str = Form(), background_tasks: BackgroundTasks = BackgroundTasks()):
     background_tasks.add_task(scrape_background, aimeId)
 
-    return "Scraping"
-
+    return RedirectResponse(url="/progress/?aimeId=" + aimeId, status_code=303)
 
 @app.get("/api/getProgress")
 async def get_progress(aimeId: str):
@@ -204,6 +203,10 @@ async def get_bookmarklet():
         bookmarklet = "javascript:(function(){" + jsmin(file.read()) + "}());"
         return Response(content=bookmarklet, media_type="text/plain")
 
+@app.get("/progress/")
+async def progress(aimeId: str):
+    with open("frontend/index.html") as file:
+        return HTMLResponse(file.read(), status_code=200)
 
 @app.get("/")
 async def read_index():

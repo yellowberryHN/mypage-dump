@@ -27,17 +27,24 @@ function newBar(elementId) {
   return bar
 }
 
-function checkProgress(aimeId) {
+function updateProgress(aimeId) {
     const http = new XMLHttpRequest()
 
-    http.open("GET", "http://localhost:8000/getProgress?aimeId=8730272")
+    http.open("GET", "http://localhost:8000/api/getProgress?aimeId=" + aimeId)
     http.send()
 
-    http.onload = () => console.log(http.responseText)
+    http.onload = () => {
+      let progressJson = JSON.parse(http.responseText)
+      bests.setText(progressJson.bests_completed + "/" + progressJson.bests_total)
+      bests.animate(progressJson.bests_completed / progressJson.bests_total)
+    }
 }
 
-let bests = newBar("progress1")
-bests.setText('1/20')
-bests.animate(1/20)
+function getAimeId() {
+  return window.location.href.replace("http://localhost:8000/progress/?aimeId=", "")
+}
 
-checkProgress(123123098)
+
+let bests = newBar("progress1")
+let aimeId = getAimeId()
+setInterval(updateProgress, 1000, aimeId)
