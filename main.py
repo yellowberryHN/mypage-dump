@@ -3,10 +3,15 @@ from fastapi import FastAPI, Form, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 from bs4 import BeautifulSoup
+
+# time stuff
 from datetime import datetime
+import pytz
 
 def get_int(string):
     return int(re.search(r'(\d+)', string).group(1))
+
+jst = pytz.timezone("Asia/Tokyo") # used for time conversion
 
 class DifficultyStats:
     def __init__(self, score, rate, achieve, play_count):
@@ -43,6 +48,11 @@ class RecentPlay(Song):
     judgements = [0,0,0,0] # marv, great, good, miss
     timing = [0,0] # fast, slow
     max_combo = 0
+
+    def __init__(self, id, name, timestamp):
+        self.id = id 
+        self.name = name
+        self.timestamp = timestamp
 
 class User:
     wsid = ""
@@ -135,14 +145,17 @@ class User:
         # Get song data from song list
         recentlist = soup.select(".playdata__history-list__wrap > li")
         for song in recentlist:
+            # play time
             time = song.select_one(".playdata__history-list__song-info__top")
             time.span.decompose()
-            timestamp = datetime.strptime(time.text,'%Y/%m/%d %H:%M:%S')
-            print(timestamp) # TODO: Normalize to UTC
+            timestamp = jst.localize(datetime.strptime(time.text,'%Y/%m/%d %H:%M:%S')).astimezone(pytz.utc)
+            #print(timestamp)
 
-            # recent = RecentPlay()
 
-            # self.recents.append()
+
+            #recent = RecentPlay()
+
+            #self.recents.append(recent)
 
 
     def scrape(self):
@@ -160,7 +173,7 @@ class User:
 
 
 app = FastAPI()
-app.mount("/public/", StaticFiles(directory="frontend", html=True), name="frontend")
+app.mount("/static/", StaticFiles(directory="frontend", html=True), name="frontend")
 
 users = {}
 
@@ -169,14 +182,14 @@ def scrape_background(aimeId):
     users[aimeId] = User(aimeId)
     users[aimeId].scrape()
 
-@app.post("/api/scrape/")
+@app.post("/api/scrape")
 async def scrape(aimeId: str = Form(), background_tasks: BackgroundTasks = BackgroundTasks()):
     background_tasks.add_task(scrape_background, aimeId)
 
     return "Scraping"
 
 
-@app.get("/api/getProgress/")
+@app.get("/api/getProgress")
 async def get_progress(aimeId: str):
     if aimeId in users.keys():
         return users[aimeId].progress()
@@ -185,4 +198,4 @@ async def get_progress(aimeId: str):
 
 @app.get("/")
 async def read_index():
-    return RedirectResponse(url="/public/index.html")
+    return RedirectResponse(url="/static/index.html")

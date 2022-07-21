@@ -30,7 +30,7 @@ function newBar(elementId) {
 function checkProgress(aimeId) {
     const http = new XMLHttpRequest()
 
-    http.open("GET", "http://localhost:8000/getProgress/?aimeId=8730272")
+    http.open("GET", "http://localhost:8000/getProgress?aimeId=8730272")
     http.send()
 
     http.onload = () => console.log(http.responseText)
