@@ -35,8 +35,13 @@ function updateProgress(aimeId) {
 
     http.onload = () => {
       let progressJson = JSON.parse(http.responseText)
-      bests.setText(progressJson.bests_completed + "/" + progressJson.bests_total)
-      bests.animate(progressJson.bests_completed / progressJson.bests_total)
+      if(!progressJson.bests_total == undefined || !progressJson.bests_total == 0) {
+        bests.setText(progressJson.bests_completed + "/" + progressJson.bests_total)
+        bests.animate(progressJson.bests_completed / progressJson.bests_total)
+        if(progressJson.bests_completed == progressJson.bests_total) {
+          clearInterval(updateInterval)
+        }
+      }
     }
 }
 
@@ -47,4 +52,4 @@ function getAimeId() {
 
 let bests = newBar("progress1")
 let aimeId = getAimeId()
-setInterval(updateProgress, 1000, aimeId)
+let updateInterval = setInterval(updateProgress, 1000, aimeId)
