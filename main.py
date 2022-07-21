@@ -1,5 +1,5 @@
 import requests, re
-from fastapi import FastAPI, Form
+from fastapi import FastAPI, Form, BackgroundTasks
 from bs4 import BeautifulSoup
 
 def get_int(string):
@@ -22,19 +22,31 @@ class DifficultyStats:
     # achieve = triangle (0-3)
     #https://wacca.marv-games.jp/web/music/detail 
     
-class Song:
-    total_plays = 0
-    difficulties = []
+class Progress:
+    def __init__(self, bests_total, bests_completed) -> None:
+        self.bests_total =  bests_total
+        self.bests_completed = bests_completed
 
+class Song:
     def __init__(self, id, name):
         self.id = id
         self.name = name
 
+class PersonalBest(Song):
+    total_plays = 0
+    difficulties = []
+
+class RecentPlay(Song):
+    judgements = [0,0,0,0] # marv, great, good, miss
+    timing = [0,0] # fast, slow
+    max_combo = 0
 
 class User:
     wsid = ""
     response = ""
-    songs = []
+    personal_bests = []
+    personal_bests_total = 0
+    recents = []
     headers_form_encoded = {"Content-Type": "application/x-www-form-urlencoded"} 
 
     def login_request(self):
@@ -47,7 +59,22 @@ class User:
         #print("gen_cookie(): new cookie '{0}'".format(self.wsid))
         return "WSID={0}; WUID={0}".format(self.wsid)
 
-    def scrape_song(self, song):
+    def get_bests(self):
+        print("Getting song list...")
+        self.response = requests.request("GET", "https://wacca.marv-games.jp/web/music", headers = { "Cookie": self.gen_cookie() })
+        
+        soup = BeautifulSoup(self.response.text, 'html.parser')
+        
+        # Get song data from song list
+        songlist = soup.find_all("form",attrs={"name": re.compile("detail")}, limit=40)
+
+        self.personal_bests_total = len(songlist)
+
+        print("Getting song data for {0} songs...".format(self.personal_bests_total))
+        for song in songlist:
+            self.personal_bests.append(self.scrape_best(PersonalBest(int(song.input["value"]), song.parent.a.div.div.string)))
+
+    def scrape_best(self, song):
         print("* <{0}> [{1}] ".format(song.id, song.name), end='')
 
         url = "https://wacca.marv-games.jp/web/music/detail"
@@ -103,30 +130,53 @@ class User:
         #for diff in song.difficulties:
         #    print(diff.__dict__)
 
-    def get_songs(self):
-        print("Getting song list...")
-        self.response = requests.request("GET", "https://wacca.marv-games.jp/web/music", headers = { "Cookie": self.gen_cookie() })
-        
+    def get_recentplays(self):
+        print("Getting recent plays...")
+        self.response = requests.request("GET", "https://wacca.marv-games.jp/web/history", headers = { "Cookie": self.gen_cookie() })
+
         soup = BeautifulSoup(self.response.text, 'html.parser')
-        
+
         # Get song data from song list
-        songlist = soup.find_all("form",attrs={"name": re.compile("detail")}, limit=0)
-        print("Getting song data for {0} songs...".format(len(songlist)))
-        for song in songlist:
-            self.songs.append(self.scrape_song(Song(int(song.input["value"]), song.parent.a.div.div.string)))
+        recentlist = soup.search(".playdata__history-list__wrap > li")
+        for song in recentlist:
+            time = song.search(".playdata__history-list__song-info__top").span.decompose()
+            timestamp = datetime.strptime(time,'%Y/%m/%d %H:%M:%S')
+            print(timestamp)
+            # recent = RecentPlay()
+
+            # self.recents.append()
+
+
+    def scrape(self):
+        self.get_bests()
+
+    def progress(self):
+        return Progress(self.personal_bests_total, len(self.personal_bests))
 
     def __init__(self, id):
         self.id = id
         self.login_request()
-        self.gen_cookie()
-        self.get_songs()
-        
+        self.gen_cookie()        
 
 
 app = FastAPI()
 
+users = {}
+
+
+def scrape(aimeId):
+    users[aimeId] = User(aimeId)
+    users[aimeId].scrape()
+
 @app.post("/")
-async def root(aimeId: str = Form()):
-    user = User(aimeId)
+async def root(aimeId: str = Form(), background_tasks: BackgroundTasks = BackgroundTasks()):
+    background_tasks.add_task(scrape, aimeId)
 
     return "Success"
+
+@app.get("/getProgress/")
+async def get_progress(aimeId: str):
+    if aimeId in users.keys():
+        return users[aimeId].progress()
+    else:
+        return "User not found"
