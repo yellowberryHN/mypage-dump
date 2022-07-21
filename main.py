@@ -2,7 +2,7 @@ import requests, re, time
 from fastapi import FastAPI, Form, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse, Response
-from jsmin import jsmin
+#from jsmin import jsmin
 from bs4 import BeautifulSoup
 
 # time stuff
@@ -46,14 +46,13 @@ class PersonalBest(Song):
     difficulties = []
 
 class RecentPlay(Song):
-    judgements = [0,0,0,0] # marv, great, good, miss
-    timing = [0,0] # fast, slow
-    max_combo = 0
-
-    def __init__(self, id, name, timestamp):
+    def __init__(self, id, name, timestamp, judgements, timings, max_combo):
         self.id = id 
         self.name = name
         self.timestamp = timestamp
+        self.judgements = judgements
+        self.timings = timings
+        self.max_combo = max_combo
 
 class User:
     wsid = ""
@@ -86,7 +85,7 @@ class User:
 
         print("Getting song data for {0} songs...".format(self.personal_bests_total))
         for song in songlist:
-            self.personal_bests.append(self.scrape_personal_best(PersonalBest(int(song.input["value"]), song.parent.a.div.div.string)))
+            self.personal_bests.append(self.scrape_personal_best(PersonalBest(int(song.input["value"]), song.parent.a.div.div.text)))
 
     def scrape_personal_best(self, song):
         print("* <{0}> [{1}] ".format(song.id, song.name), end='')
@@ -152,11 +151,24 @@ class User:
             timestamp = jst.localize(datetime.strptime(time.text,'%Y/%m/%d %H:%M:%S')).astimezone(pytz.utc)
             #print(timestamp)
 
+            name = song.select_one(".playdata__history-list__song-info__name").text
+            song_id = song.select_one("#musicId")["value"]
 
+            row_elements = song.select(".playdata__detail-table > li", limit=7)
+            judgements = []
+            for row in range(4):
+                judgements.append(int(row_elements[row].select_one(".detail-table__score").text))
+            timings = []
+            for row in range(4,6):
+                timings.append(int(row_elements[row].select_one(".detail-table__score").text))
+                
+            max_combo = int(song.select_one(".detail-table__score.combo .combo__num").text)
 
-            #recent = RecentPlay()
+            recent = RecentPlay(song_id, name, timestamp, judgements, timings, max_combo)
+            
+            print(recent.__dict__)
 
-            #self.recents.append(recent)
+            self.recents.append(recent)
 
 
     def scrape(self):
@@ -197,12 +209,12 @@ async def get_progress(aimeId: str):
     else:
         return {"error": "User not found"}
 
-@app.get("/bookmarklet/bookmarklet.js")
-async def get_bookmarklet():
-    with open("book/main.js") as file:
-        # this has to be a self-evaluating anonymous function
-        bookmarklet = "javascript:(function(){" + jsmin(file.read()) + "}());"
-        return Response(content=bookmarklet, media_type="text/plain")
+#@app.get("/bookmarklet/bookmarklet.js")
+#async def get_bookmarklet():
+#    with open("book/main.js") as file:
+#        # this has to be a self-evaluating anonymous function
+#        bookmarklet = "javascript:(function(){" + jsmin(file.read()) + "}());"
+#        return Response(content=bookmarklet, media_type="text/plain")
 
 
 @app.get("/")

@@ -1,12 +1,14 @@
 let actionList = document.querySelectorAll('.fpm');
 let promptList = document.querySelectorAll('div:nth-child(2) > div:nth-child(1) > p:nth-child(2):not(.iziModal-header-subtitle)');
 document.querySelector('.login-select > p').textContent = "Select a profile to dump:"
-document.querySelector('.login-select > h2').textContent = "WACCA (MyPage Dump)" 
+document.querySelector('.login-select > h2').textContent = "WACCA (MyPage Dump)"
+document.querySelector('.bottom_btn > ul > li > a').textContent = "Cancel"
 
-for (const actionKey in actionList) {
-   actionList[actionKey].action = "https://localhost:8000/";            
+for (const actionKey of actionList) {
+   actionKey.action = "https://localhost:8000/";
+   actionKey.querySelector('.btn_pink').style.backgroundColor = '#4A004F';
 }
 
 for (const promptKey of promptList) {
-    promptKey.textContent = "Dump user data?"
+    promptKey.innerHTML = "<b>Dump user data?</b>"
 }

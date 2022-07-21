@@ -1,0 +1,1 @@
+javascript:(function(){import('https://example.com/book/main.js').then((obj)=>obj.main())})();
