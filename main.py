@@ -1,7 +1,8 @@
 import requests, re, time
 from fastapi import FastAPI, Form, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, Response
+from jsmin import jsmin
 from bs4 import BeautifulSoup
 from datetime import datetime
 
@@ -182,6 +183,14 @@ async def get_progress(aimeId: str):
         return users[aimeId].progress()
     else:
         return {"error": "User not found"}
+
+@app.get("/bookmarklet/bookmarklet.js")
+async def get_bookmarklet():
+    with open("book/main.js") as file:
+        # this has to be a self-evaluating anonymous function
+        bookmarklet = "javascript:(function(){" + jsmin(file.read()) + "}());"
+        return Response(content=bookmarklet, media_type="text/plain")
+
 
 @app.get("/")
 async def read_index():
