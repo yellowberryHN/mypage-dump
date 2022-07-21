@@ -1,5 +1,7 @@
-import requests, re
+import requests, re, time
 from fastapi import FastAPI, Form, BackgroundTasks
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import RedirectResponse
 from bs4 import BeautifulSoup
 from datetime import datetime
 
@@ -153,27 +155,34 @@ class User:
     def __init__(self, id):
         self.id = id
         self.login_request()
-        self.gen_cookie()        
+        self.gen_cookie()   
+        self.timestamp = time.time()     
 
 
 app = FastAPI()
+app.mount("/public/", StaticFiles(directory="frontend", html=True), name="frontend")
 
 users = {}
 
 
-def scrape(aimeId):
+def scrape_background(aimeId):
     users[aimeId] = User(aimeId)
     users[aimeId].scrape()
 
-@app.post("/")
-async def root(aimeId: str = Form(), background_tasks: BackgroundTasks = BackgroundTasks()):
-    background_tasks.add_task(scrape, aimeId)
+@app.post("/api/scrape/")
+async def scrape(aimeId: str = Form(), background_tasks: BackgroundTasks = BackgroundTasks()):
+    background_tasks.add_task(scrape_background, aimeId)
 
-    return "Success"
+    return "Scraping"
 
-@app.get("/getProgress")
+
+@app.get("/api/getProgress/")
 async def get_progress(aimeId: str):
     if aimeId in users.keys():
         return users[aimeId].progress()
     else:
         return {"error": "User not found"}
+
+@app.get("/")
+async def read_index():
+    return RedirectResponse(url="/public/index.html")
