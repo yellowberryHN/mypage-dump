@@ -72,10 +72,11 @@ class User:
     def gen_cookie(self):
         self.wsid = re.search(r'WSID=(\w+);', self.response.headers["Set-Cookie"]).group(1)
         #print("gen_cookie(): new cookie '{0}'".format(self.wsid))
-        return "WSID={0}; WUID={0}".format(self.wsid)
+        return {"Cookie": "WSID={0}; WUID={0}".format(self.wsid)}
 
     def get_user_info(self):
-        self.response = requests.request("GET", "https://wacca.marv-games.jp/web/top", headers = { "Cookie": self.gen_cookie() })
+        # TODO: use /web/player instead for more data in one place
+        self.response = requests.request("GET", "https://wacca.marv-games.jp/web/top", headers=self.gen_cookie())
 
         soup = BeautifulSoup(self.response.text, 'html.parser')
 
@@ -89,7 +90,7 @@ class User:
 
     def get_personal_bests(self):
         print("Getting song list...")
-        self.response = requests.request("GET", "https://wacca.marv-games.jp/web/music", headers = { "Cookie": self.gen_cookie() })
+        self.response = requests.request("GET", "https://wacca.marv-games.jp/web/music", headers=self.gen_cookie())
         
         soup = BeautifulSoup(self.response.text, 'html.parser')
         
@@ -106,7 +107,7 @@ class User:
         print("* <{0}> [{1}] ".format(song.id, song.name), end='')
 
         url = "https://wacca.marv-games.jp/web/music/detail"
-        self.response = requests.request("POST", url, data = "musicId={0}".format(song.id), headers=self.headers_form_encoded | { "Cookie": self.gen_cookie() })
+        self.response = requests.request("POST", url, data = "musicId={0}".format(song.id), headers=self.headers_form_encoded | self.gen_cookie())
         
         soup = BeautifulSoup(self.response.text, 'html.parser')
         
@@ -153,7 +154,7 @@ class User:
 
     def get_recent_plays(self):
         print("Getting recent plays...")
-        self.response = requests.request("GET", "https://wacca.marv-games.jp/web/history", headers = { "Cookie": self.gen_cookie() })
+        self.response = requests.request("GET", "https://wacca.marv-games.jp/web/history", headers=self.gen_cookie())
 
         soup = BeautifulSoup(self.response.text, 'html.parser')
 

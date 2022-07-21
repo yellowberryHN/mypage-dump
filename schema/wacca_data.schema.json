@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/wacca_data.schema.json",
+  "title": "WACCA Data",
+  "description": "A format to store information regarding a player of a popular game",
+  "type": "object",
+  "properties": {
+    "player": {
+      "description": "Data regarding the player",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "level": {
+          "type": "integer"
+        },
+        "rate": {
+          "type": "integer"
+        },
+        "points": {
+          "type": "integer",
+          "maximum": 99999
+        },
+        "lifetimePoints": {
+          "type": "integer"
+        },
+        "usedPoints": {
+          "type": "integer"
+        },
+        "exTickets": {
+          "type": "integer",
+          "maximum": 10
+        },
+
+        "settings": {
+          "type": "object",
+          "properties": {
+            "game": {
+              "type": "object"
+            },
+            "display": {
+              "type": "object"
+            },
+            "design": {
+              "type": "object"
+            },
+            "sound": {
+              "type": "object"
+            }
+          },
+          "required": ["game", "display", "design", "sound"]
+        },
+        "songs": {
+          "description": "A list of songs this player has access to and their scores",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "playCount": {
+                "type": "integer"
+              },
+              "difficulties": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "score": {
+                      "type": "integer",
+                      "maximum": 1000000
+                    },
+                    "rating": {
+                      "type": "integer"
+                    },
+                    "achieve": {
+                      "type": "integer"
+                    },
+                    "playCount": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": ["score"]
+                },
+                "minItems": 3,
+                "maxItems": 4
+              }
+            },
+            "required": ["id"]
+          },
+          "minItems": 1
+        },
+        "recents": {
+          "description": "A list of up to 50 of the most recent plays, and their score breakdown",
+          "type": "array",
+          "items": {
+            "type": "object"
+          },
+          "minItems": 1,
+          "maxItems": 50
+        },
+        "friends": {
+          "description": "A list of this player's friends",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "friendCode": {
+                "type": "integer"
+              }
+            },
+            "required": ["name", "friendCode"]
+          },
+          "minItems": 1
+        }
+      },
+      "required": ["id", "name"]
+    },
+  },
+  "required": ["player"]
+}
