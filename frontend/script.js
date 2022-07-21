@@ -27,29 +27,24 @@ function newBar(elementId) {
   return bar
 }
 
-function updateProgress(aimeId) {
-    const http = new XMLHttpRequest()
+function updateProgress(userId) {
+  const http = new XMLHttpRequest()
 
-    http.open("GET", "http://localhost:8000/api/getProgress?aimeId=" + aimeId)
-    http.send()
+  http.open("GET", "http://localhost:8000/api/getProgress?id=" + userId)
+  http.send()
 
-    http.onload = () => {
-      let progressJson = JSON.parse(http.responseText)
-      if(!progressJson.bests_total == undefined || !progressJson.bests_total == 0) {
-        bests.setText(progressJson.bests_completed + "/" + progressJson.bests_total)
-        bests.animate(progressJson.bests_completed / progressJson.bests_total)
-        if(progressJson.bests_completed == progressJson.bests_total) {
-          clearInterval(updateInterval)
-        }
+  http.onload = () => {
+    let progressJson = JSON.parse(http.responseText)
+    if(!progressJson.bests_total == undefined || !progressJson.bests_total == 0) {
+      bests.setText(progressJson.bests_completed + "/" + progressJson.bests_total)
+      bests.animate(progressJson.bests_completed / progressJson.bests_total)
+      if(progressJson.bests_completed == progressJson.bests_total) {
+        clearInterval(updateInterval)
       }
     }
+  }
 }
 
-function getAimeId() {
-  return window.location.href.replace("http://localhost:8000/progress/?aimeId=", "")
-}
-
-
-let bests = newBar("progress1")
-let aimeId = getAimeId()
-let updateInterval = setInterval(updateProgress, 1000, aimeId)
+let bests = newBar("progress1");
+let userId = new URLSearchParams(location.search).get("id");
+let updateInterval = setInterval(updateProgress, 1000, userId);

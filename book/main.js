@@ -6,7 +6,8 @@ document.querySelector('.login-select > h2').textContent = "WACCA (MyPage Dump)"
 document.querySelector('.bottom_btn > ul > li > a').textContent = "Cancel";
 
 for (const actionKey of actionList) {
-   actionKey.action = "http://localhost:8000/api/scrape/";
+   actionKey.action = "http://localhost:8000/api/scrape";
+   actionKey.querySelector("\x23\x61\x69\x6d\x65\x49\x64").name = "userId";
    actionKey.querySelector('.btn_pink').style.backgroundColor = '#4A004F';
 }
 

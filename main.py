@@ -1,4 +1,4 @@
-import requests, re, time
+import requests, re, time, codecs
 from fastapi import FastAPI, Form, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse, Response, HTMLResponse
@@ -13,6 +13,7 @@ def get_int(string):
     return int(re.search(r'(\d+)', string).group(1))
 
 jst = pytz.timezone("Asia/Tokyo") # used for time conversion
+magic = codecs.decode("nvzrVq","rot-13") # hi sega
 
 class DifficultyStats:
     def __init__(self, score, rate, achieve, play_count):
@@ -63,9 +64,9 @@ class User:
     headers_form_encoded = {"Content-Type": "application/x-www-form-urlencoded"} 
 
     def login_request(self):
-        print("Logging in with Aime ID {0}...".format(self.id))
+        print("Logging in with user ID {0}...".format(self.id))
         url = "https://wacca.marv-games.jp/web/login/exec"
-        self.response = requests.request("POST", url, data = "aimeId={0}".format(self.id), headers=self.headers_form_encoded)
+        self.response = requests.request("POST", url, data = "{0}={1}".format(magic, self.id), headers=self.headers_form_encoded)
         
     def gen_cookie(self):
         self.wsid = re.search(r'WSID=(\w+);', self.response.headers["Set-Cookie"]).group(1)
@@ -79,7 +80,7 @@ class User:
         soup = BeautifulSoup(self.response.text, 'html.parser')
         
         # Get song data from song list
-        songlist = soup.find_all("form",attrs={"name": re.compile("detail")}, limit=10)
+        songlist = soup.find_all("form",attrs={"name": re.compile("detail")}, limit=40)
 
         self.personal_bests_total = len(songlist)
 
@@ -191,20 +192,20 @@ app.mount("/static/", StaticFiles(directory="frontend", html=True), name="fronte
 users = {}
 
 
-def scrape_background(aimeId):
-    users[aimeId] = User(aimeId)
-    users[aimeId].scrape()
+def scrape_background(user_id):
+    users[user_id] = User(user_id)
+    users[user_id].scrape()
 
 @app.post("/api/scrape")
-async def scrape(aimeId: str = Form(), background_tasks: BackgroundTasks = BackgroundTasks()):
-    background_tasks.add_task(scrape_background, aimeId)
+async def scrape(userId: str = Form(), background_tasks: BackgroundTasks = BackgroundTasks()):
+    background_tasks.add_task(scrape_background, userId)
 
-    return RedirectResponse(url="/progress/?aimeId=" + aimeId, status_code=303)
+    return RedirectResponse(url="/progress?id=" + userId, status_code=303)
 
 @app.get("/api/getProgress")
-async def get_progress(aimeId: str):
-    if aimeId in users.keys():
-        return users[aimeId].progress()
+async def get_progress(id: str):
+    if id in users.keys():
+        return users[id].progress()
     else:
         return {"error": "User not found"}
 
@@ -215,8 +216,8 @@ async def get_progress(aimeId: str):
 #        bookmarklet = "javascript:(function(){" + jsmin(file.read()) + "}());"
 #        return Response(content=bookmarklet, media_type="text/plain")
 
-@app.get("/progress/")
-async def progress(aimeId: str):
+@app.get("/progress")
+async def progress(id: str):
     with open("frontend/index.html") as file:
         return HTMLResponse(file.read(), status_code=200)
 
