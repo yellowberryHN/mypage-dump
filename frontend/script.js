@@ -41,12 +41,42 @@ function updateProgress(userId) {
       if(progressJson.bests_completed == progressJson.bests_total) {
         bests.setText('Completed!')
         document.getElementById("progress-container").classList.add("hidden")
+        loadUserData(userId)
         setTimeout(function(){document.getElementById("ui").classList.add("visible")}, 1000)
         
         clearInterval(updateInterval)
       }
     }
   }
+}
+
+function loadUserData(userId) {
+  const http = new XMLHttpRequest()
+
+  http.open("GET", "http://localhost:8000/api/getBasicUser?id=" + userId)
+  http.send()
+
+  http.onload = () => {
+    let userDataJson = JSON.parse(http.responseText)
+
+    console.log(userDataJson)
+
+    if(!userDataJson.error) {
+      document.getElementById("level").textContent = "Lv." + userDataJson["level"]
+      document.getElementById("name").textContent = userDataJson["name"]
+      document.getElementById("title").textContent = userDataJson["title"]
+      document.getElementById("points").textContent = userDataJson["points"]
+    }
+    else {
+      setTimeout(loadUserData, 1000, userId)
+    }
+  }
+
+
+}
+
+function downloadDump() {
+  console.log("downloading dump")
 }
 
 let bests = newBar("progress1");

@@ -1,3 +1,114 @@
+* {
+    padding: 0;
+    border: 0;
+    outline: 0;
+    font-size: 100%;
+    vertical-align: baseline;
+    background: transparent;
+}
+
+section {
+    display: block;
+}
+
+a {
+    margin: 0;
+    padding: 0;
+    font-size: 100%;
+    vertical-align: baseline;
+    background: transparent;
+    text-decoration: none;
+    cursor: pointer;
+    color: #FFF;
+}
+
+.login-select ul.select-acount li {
+    position: relative;
+    width: 90%;
+    margin: 15px auto;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-pack: justify;
+    -ms-flex-pack: justify;
+    justify-content: space-between;
+    background-color: #FFF;
+    border: #000 solid 2px;
+    border-radius: 10px;
+    padding: 5px;
+}
+
+.login-select .symbol__color__base {
+    position: relative;
+}
+
+.login-select ul.select-acount li .user-info__icon img {
+    width: 100%;
+}
+
+.login-select .symbol__color__base > img {
+    border-radius: 50%;
+    -webkit-box-shadow: 0 0 0 1px #FFF, 0 0 0 2px #9E9E9E;
+    box-shadow: 0 0 0 1px #FFF, 0 0 0 2px #9E9E9E;
+}
+
+
+.login-select ul.select-acount li .user-info__detail {
+    width: 53%;
+    font-size: 0.7rem;
+    font-weight: bold;
+}
+
+.login-select ul.select-acount li .user-info__detail .user-info__detail__wrap {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-pack: justify;
+    -ms-flex-pack: justify;
+    justify-content: space-between;
+}
+
+.login-select ul.select-acount li .user-info__detail {
+    font-size: 0.7rem;
+    font-weight: bold;
+}
+
+.login-select ul.select-acount li .user-info__detail .user-info__detail__title {
+    background: #E5E5E5;
+    color: #000;
+    font-size: 1em;
+    line-height: 1em;
+    margin: 5px 0;
+    padding: 8px 4px 8px 8px;
+    height: 25px;
+    overflow: scroll;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.login-select ul.select-acount li .user-info__detail {
+    font-size: 0.7rem;
+    font-weight: bold;
+}
+
+
+.login-select ul.select-acount li .user-info__icon__stage {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 50px;
+    z-index: 1;
+}
+
+li {
+    list-style: none;
+}
+
+body {
+    font-family: '繝偵Λ繧ｮ繝手ｧ偵ざ繧ｷ繝�け','Hiragino Sans',YuGothic,'Yu Gothic','繝｡繧､繝ｪ繧ｪ', Meiryo,'�ｭ�ｳ �ｰ繧ｴ繧ｷ繝�け','MS PGothic',sans-serif;
+    line-height: 1;
+}
+
 .container {
     width: 375px;
     margin: 0 auto;

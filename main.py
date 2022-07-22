@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 import pytz
 
+
 def get_int(string):
     return int(re.search(r'(\d+)', string).group(1))
 
@@ -76,17 +77,24 @@ class User:
 
     def get_user_info(self):
         # TODO: use /web/player instead for more data in one place
-        self.response = requests.request("GET", "https://wacca.marv-games.jp/web/top", headers=self.gen_cookie())
+        self.response = requests.request("GET", "https://wacca.marv-games.jp/web/player", headers=self.gen_cookie())
 
         soup = BeautifulSoup(self.response.text, 'html.parser')
 
         self.name = soup.select_one('.user-info__detail__name').text
-        self.level = soup.select_one('.user-info__detail__lv > span').text.replace("Lv.", "")
-        self.ex = soup.select_one('.user-info__detail__ex').text
-        self.rate = soup.select_one('.rating__data').text
-        self.rp = soup.select_one('.user-info__detail__wp').text.replace(" RP", "")
-        self.icon = soup.select_one('.icon__image > img')["src"]
         self.title = soup.select_one('.user-info__detail__title').text
+        self.level = get_int(soup.select_one('.user-info__detail__lv > span').text)
+        self.rate = soup.select_one('.rating__data').text
+        
+        self.points = get_int(soup.select_one('.user-info__detail__wp').text)
+        # points.img.decompose()
+        # points.span.decompose()
+        # self.points = points
+
+        self.lifetime_points = get_int(soup.select_one('dl.poss-wp__detail:nth-child(2) > dd:nth-child(1)').text)
+        self.used_points = soup.select_one('dl.poss-wp__detail:nth-child(3) > dd:nth-child(2)')
+        self.ex_tickets = soup.select_one('.user-info__detail__ex').text
+        self.icon = soup.select_one('.icon__image > img')["src"]
 
     def get_personal_bests(self):
         print("Getting song list...")
@@ -95,7 +103,7 @@ class User:
         soup = BeautifulSoup(self.response.text, 'html.parser')
         
         # Get song data from song list
-        songlist = soup.find_all("form",attrs={"name": re.compile("detail")}, limit=40)
+        songlist = soup.find_all("form",attrs={"name": re.compile("detail")}, limit=5)
 
         self.personal_bests_total = len(songlist)
 
@@ -225,10 +233,17 @@ async def get_progress(id: str):
     else:
         return {"error": "User not found"}
 
-@app.get("/api/getName")
-async def get_name(id: str):
+@app.get("/api/getBasicUser")
+async def get_basic_user(id: str):
     if id in users.keys():
-        return users[id].name
+        user = users[id]
+        
+        return {
+            "name": user.name,
+            "level": user.level,
+            "title": user.title,
+            "points": user.points        
+        }
     else:
         return {"error": "User not found"}
 
