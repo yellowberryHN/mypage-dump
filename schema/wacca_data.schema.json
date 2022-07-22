@@ -15,11 +15,29 @@
         "name": {
           "type": "string"
         },
+        "icon": {
+          "type": "integer"
+        },
         "title": {
           "type": "string"
         },
         "level": {
           "type": "integer"
+        },
+        "stage": {
+          "type": "object",
+          "properties": {
+            "level": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 14
+            },
+            "type": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 3
+            }
+          }
         },
         "rate": {
           "type": "integer"
@@ -155,6 +173,13 @@
             }
           },
           "required": ["normal", "special"]
+        },
+        "icons": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 1
         }
       },
       "required": ["id", "name"]

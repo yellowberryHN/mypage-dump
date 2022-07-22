@@ -2,19 +2,41 @@ import requests, re, time, codecs
 from fastapi import FastAPI, Form, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse, Response, HTMLResponse
-#from jsmin import jsmin
+from jsmin import jsmin
 from bs4 import BeautifulSoup
 
 # time stuff
 from datetime import datetime
 import pytz
 
+"""
 
-def get_int(string):
-    return int(re.search(r'(\d+)', string).group(1))
+Left to implement:
+- stage up
+- settings
+- friends
+- plates
+- navs
+- trophies
+- total high score (added up all of scores?)
+- special song unlocks [/music/unlock]
+- favorites
+- gates
+
+"""
 
 jst = pytz.timezone("Asia/Tokyo") # used for time conversion
 magic = codecs.decode("nvzrVq","rot-13") # hi sega
+
+difficulty_dict = {
+    "NORMAL": 0,
+    "HARD": 1,
+    "EXPERT": 2,
+    "INFERNO": 3
+}
+
+def get_int(string):
+    return int(re.search(r'(\d+)', string).group(1))
 
 class DifficultyStats:
     def __init__(self, score, rate, achieve, play_count):
@@ -23,20 +45,15 @@ class DifficultyStats:
         self.achieve = achieve
         self.play_count = play_count
 
-    def __str__(self):
-        return self.__dict__
-    
-    # pink one: total_plays
-    # play count: black text about pink oval
-    # score: black text next to circle and triangle
-    # rate = circle icon (0-13) or none
-    # achieve = triangle (0-3)
-    #https://wacca.marv-games.jp/web/music/detail 
-    
 class Progress:
     def __init__(self, bests_total, bests_completed) -> None:
         self.bests_total =  bests_total
         self.bests_completed = bests_completed
+
+class Stage:
+    def __init__(self, level, type):
+        self.level = level
+        self.type = type
 
 class Song:
     def __init__(self, id, name):
@@ -44,14 +61,15 @@ class Song:
         self.name = name
 
 class PersonalBest(Song):
-    total_plays = 0
+    play_count = 0
     difficulties = []
 
 class RecentPlay(Song):
-    def __init__(self, id, name, timestamp, judgements, timings, max_combo):
+    def __init__(self, id, name, timestamp, difficulty, judgements, timings, max_combo):
         self.id = id 
         self.name = name
         self.timestamp = timestamp
+        self.difficulty = difficulty
         self.judgements = judgements
         self.timings = timings
         self.max_combo = max_combo
@@ -64,6 +82,7 @@ class User:
     personal_bests_total = 0
     recents = []
     headers_form_encoded = {"Content-Type": "application/x-www-form-urlencoded"} 
+    stage = {}
 
     def login_request(self):
         print("Logging in with user ID {0}...".format(self.id))
@@ -76,7 +95,7 @@ class User:
         return {"Cookie": "WSID={0}; WUID={0}".format(self.wsid)}
 
     def get_user_info(self):
-        # TODO: use /web/player instead for more data in one place
+        print("Getting player info...")
         self.response = requests.request("GET", "https://wacca.marv-games.jp/web/player", headers=self.gen_cookie())
 
         soup = BeautifulSoup(self.response.text, 'html.parser')
@@ -84,17 +103,21 @@ class User:
         self.name = soup.select_one('.user-info__detail__name').text
         self.title = soup.select_one('.user-info__detail__title').text
         self.level = get_int(soup.select_one('.user-info__detail__lv > span').text)
-        self.rate = soup.select_one('.rating__data').text
-        
-        self.points = get_int(soup.select_one('.user-info__detail__wp').text)
-        # points.img.decompose()
-        # points.span.decompose()
-        # self.points = points
+        self.rate = int(soup.select_one('.rating__data').text)
 
+        stage = soup.select_one('.user-info__icon__stage img')
+        if stage:
+            tmp = re.search(r'stage_icon_(\d+)_(\d).png', stage["src"])
+            self.stage = Stage(tmp.group(1), tmp.group(2))
+            print(self.stage.__dict__)
+
+        pointlist = soup.select(".poss-wp")
+        self.points = get_int(soup.select_one('.user-info__detail__wp').text)
         self.lifetime_points = get_int(soup.select_one('dl.poss-wp__detail:nth-child(2) > dd:nth-child(1)').text)
-        self.used_points = soup.select_one('dl.poss-wp__detail:nth-child(3) > dd:nth-child(2)')
-        self.ex_tickets = soup.select_one('.user-info__detail__ex').text
-        self.icon = soup.select_one('.icon__image > img')["src"]
+        self.used_points = get_int(soup.select_one('dl.poss-wp__detail:nth-child(3) > dd:nth-child(2)').text)
+        
+        self.ex_tickets = int(soup.select_one('.user-info__detail__ex').text)
+        self.icon = get_int(soup.select_one('.icon__image > img')["src"])
 
     def get_personal_bests(self):
         print("Getting song list...")
@@ -118,16 +141,10 @@ class User:
         self.response = requests.request("POST", url, data = "musicId={0}".format(song.id), headers=self.headers_form_encoded | self.gen_cookie())
         
         soup = BeautifulSoup(self.response.text, 'html.parser')
-        
-        
-        song.total_plays = get_int(soup.select_one(".song-info__play-count > span").text)
+        song.play_count = get_int(soup.select_one(".song-info__play-count > span").text)
     
-
         # Selector for difficulties
         diffs = soup.select(".score-detail__list__song-info")
-
-        song.difficulties = []
-
 
         for diff in diffs:
             play_count = get_int(diff.select_one(".song-info__top__play-count").text)
@@ -155,10 +172,6 @@ class User:
             song.difficulties.append(diff_stats)
          
         print("({0} diffs)".format(len(diffs))) # mark song as done
-        #print(song.__dict__)
-
-        #for diff in song.difficulties:
-        #    print(diff.__dict__)
 
     def get_recent_plays(self):
         print("Getting recent plays...")
@@ -178,6 +191,8 @@ class User:
             name = song.select_one(".playdata__history-list__song-info__name").text
             song_id = song.select_one("#musicId")["value"]
 
+            diff = difficulty_dict[song.select_one(".playdata__history-list__song-info__lv").text.split(" ")[0]]
+
             row_elements = song.select(".playdata__detail-table > li", limit=7)
             judgements = []
             for row in range(4):
@@ -188,17 +203,48 @@ class User:
                 
             max_combo = int(song.select_one(".detail-table__score.combo .combo__num").text)
 
-            recent = RecentPlay(song_id, name, timestamp, judgements, timings, max_combo)
-            
-            print(recent.__dict__)
-
+            recent = RecentPlay(song_id, name, timestamp, diff, judgements, timings, max_combo)
+        
             self.recents.append(recent)
+
+    def get_icons(self):
+        print("Getting unlocked icons...")
+        self.response = requests.request("GET", "https://wacca.marv-games.jp/web/icon", headers=self.gen_cookie())
+        soup = BeautifulSoup(self.response.text, 'html.parser')
+
+        self.icons = []
+        icon_elements = soup.select(".collection__icon-list .item")
+        for icon in icon_elements:
+            self.icons.append(int(icon["data-icon_id"]))
+
+    def get_settings(self):
+        print("Getting settings...")
+
+        # TODO: actually scrape this
+
+        print("* Game...")
+        self.response = requests.request("GET", "https://wacca.marv-games.jp/web/option/gameSetting", headers=self.gen_cookie())
+        soup = BeautifulSoup(self.response.text, 'html.parser')
+
+        print("* Display...")
+        self.response = requests.request("GET", "https://wacca.marv-games.jp/web/option/displaySetting", headers=self.gen_cookie())
+        soup = BeautifulSoup(self.response.text, 'html.parser')
+
+        print("* Design...")
+        self.response = requests.request("GET", "https://wacca.marv-games.jp/web/option/designSetting", headers=self.gen_cookie())
+        soup = BeautifulSoup(self.response.text, 'html.parser')
+
+        print("* Sound...")
+        self.response = requests.request("GET", "https://wacca.marv-games.jp/web/option/soundSetting", headers=self.gen_cookie())
+        soup = BeautifulSoup(self.response.text, 'html.parser')
 
 
     def scrape(self):
         self.get_user_info()
-        self.get_personal_bests()
-        self.get_recent_plays()
+        #self.get_personal_bests()
+        #self.get_recent_plays()
+        self.get_icons()
+        print(self.__dict__)
 
     def progress(self):
         return Progress(self.personal_bests_total, len(self.personal_bests))
@@ -247,12 +293,10 @@ async def get_basic_user(id: str):
     else:
         return {"error": "User not found"}
 
-#@app.get("/bookmarklet/bookmarklet.js")
-#async def get_bookmarklet():
-#    with open("book/main.js") as file:
-#        # this has to be a self-evaluating anonymous function
-#        bookmarklet = "javascript:(function(){" + jsmin(file.read()) + "}());"
-#        return Response(content=bookmarklet, media_type="text/plain")
+@app.get("/book.js")
+async def get_bookmarklet():
+    with open("book/main.js") as file:
+        return Response(content=jsmin(file.read()), media_type="text/javascript")
 
 @app.get("/progress")
 async def progress(id: str):
