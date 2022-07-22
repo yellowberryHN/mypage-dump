@@ -50,9 +50,9 @@ class Progress:
         self.bests_total =  bests_total
         self.bests_completed = bests_completed
 
-class Stage:
-    def __init__(self, level, type):
-        self.level = level
+class Emblem:
+    def __init__(self, stage, type):
+        self.stage = stage
         self.type = type
 
 class Song:
@@ -82,7 +82,6 @@ class User:
     personal_bests_total = 0
     recents = []
     headers_form_encoded = {"Content-Type": "application/x-www-form-urlencoded"} 
-    stage = {}
 
     def login_request(self):
         print("Logging in with user ID {0}...".format(self.id))
@@ -108,8 +107,8 @@ class User:
         stage = soup.select_one('.user-info__icon__stage img')
         if stage:
             tmp = re.search(r'stage_icon_(\d+)_(\d).png', stage["src"])
-            self.stage = Stage(tmp.group(1), tmp.group(2))
-            print(self.stage.__dict__)
+            self.emblem = Emblem(tmp.group(1), tmp.group(2))
+            print(self.emblem.__dict__)
 
         pointlist = soup.select(".poss-wp")
         self.points = get_int(soup.select_one('.user-info__detail__wp').text)
