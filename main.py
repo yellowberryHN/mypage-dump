@@ -26,6 +26,7 @@ Left to implement:
 
 jst = pytz.timezone("Asia/Tokyo") # used for time conversion
 magic = codecs.decode("nvzrVq","rot-13") # hi sega
+full_dump = True # dump play count
 
 difficulty_dict = {
     "NORMAL": 0,
@@ -85,9 +86,13 @@ class User:
         self.response = requests.request("POST", url, data = "{0}={1}".format(magic, self.id), headers=self.headers_form_encoded)
         
     def gen_cookie(self):
-        self.wsid = re.search(r'WSID=(\w+);', self.response.headers["Set-Cookie"]).group(1)
-        #print("gen_cookie(): new cookie '{0}'".format(self.wsid))
-        return {"Cookie": "WSID={0}; WUID={0}".format(self.wsid)}
+        if "Set-Cookie" in self.response.headers:
+            self.wsid = re.search(r'WSID=(\w+);', self.response.headers["Set-Cookie"]).group(1)
+            #print("gen_cookie(): new cookie '{0}'".format(self.wsid))
+            return {"Cookie": "WSID={0}; WUID={0}".format(self.wsid)}
+        else:
+            print("User got logged out...")
+            self.login_request()
 
     def get_user_info(self):
         print("Getting player info...")
@@ -130,9 +135,15 @@ class User:
         for element in favlist:
             self.favorites.append(int(element.div.form.input["value"]))
 
-        print("Getting song data for {0} songs...".format(self.songs_total))
-        for song in songlist:
-            self.songs.append(self.scrape_song_data(PersonalBest(int(song.div.form.input["value"]), song.div.a.div.div.text)))
+        if full_dump:
+            print("Getting song data for {0} songs...".format(self.songs_total))
+            for song in songlist:
+                self.songs.append(self.scrape_song_data(PersonalBest(int(song.div.form.input["value"]), song.div.a.div.div.text)))
+        else:
+            print("Getting song data for {0} songs [LITE]...".format(self.songs_total))
+            for song in songlist:
+                # TODO: write logic to parse song data from song list instead of making 7 billion requests
+                pass
 
     def scrape_song_data(self, song):
         print("* <{0}> [{1}] ".format(song.id, song.name), end='')
@@ -247,7 +258,39 @@ class User:
             "missionDirectingSkip": None
         }
 
+        design_settings = {
+            "myColor": {
+                "current": None,
+                "unlocked": []
+            },
+            "noteWidth": None,
+            "touchNoteColor": None,
+            "chainNoteColor": None,
+            "slideNoteLeftColor": None,
+            "slideNoteRightColor": None,
+            "snapNoteUpColor": None,
+            "snapNoteDownColor": None,
+            "holdNoteColor": None,
+            "slideColorInvert": None,
+            "touchEffectPop": None,
+            "touchEffectShoot": None,
+            "keyBeam": None,
+            "rNoteEffect": None
+        }
 
+        sound_settings = {
+            "noteTouchSe": None,
+            "bgmVolume": None,
+            "guideSoundVolume": None,
+            "touchNoteVolume": None,
+            "holdNoteVolume": None,
+            "slideNoteVolume": None,
+            "snapNoteVolume": None,
+            "chainNoteVolume": None,
+            "bonusNoteVolume": None,
+            "charaSound": None,
+            "rNoteVolume": None
+        }
 
         print("* Game...")
 
@@ -274,7 +317,6 @@ class User:
         print(game_settings)
 
         print("* Display...")
-        
 
         for setting in display_settings:
             self.response = requests.request("GET", "https://wacca.marv-games.jp/web/option/{0}".format(setting), headers=self.gen_cookie())
@@ -286,7 +328,7 @@ class User:
                 setting_value = int(soup.select_one('option[selected]')["value"])
             elif setting in ["multiRankDisplay", "emblemDisplay", "rateDisplay", "playerLevelDisplay", "gateDirectingSkip", "missionDirectingSkip"]:
                 setting_value = int(soup.select_one('option[selected]')["value"]) == 1
-            elif setting == "judgeDetail": 
+            elif setting in ["judgeDetail", "guideMeasureLine"]: 
                 setting_value = int(soup.select_one("div.option_image_select_content.selected > input")["value"]) == 1
             else:
                 setting_value = int(soup.select_one("div.option_image_select_content.selected > input")["value"])
@@ -295,27 +337,7 @@ class User:
 
         print(display_settings)
 
-        """
         print("* Design...")
-        design_settings = {
-            "myColor": {
-                "current": None,
-                "unlocked": []
-            },
-            "noteWidth": None,
-            "touchNoteColor": None,
-            "chainNoteColor": None,
-            "slideNoteLeftColor": None,
-            "slideNoteRightColor": None,
-            "snapNoteUpColor": None,
-            "snapnoteDownColor": None,
-            "holdNoteColor": None,
-            "slideColorInvert": None,
-            "touchEffectPop": None,
-            "touchEffectShoot": None,
-            "keyBeam": None,
-            "rNoteEffect": None
-        }
 
         for setting in design_settings:
             self.response = requests.request("GET", "https://wacca.marv-games.jp/web/option/{0}".format(setting), headers=self.gen_cookie())
@@ -324,30 +346,54 @@ class User:
             setting_value = None
 
             if setting == "myColor":
-                # for loop all colors
                 unlocked_colors = []
-
-                setting_value = {"current": 0, "unlocked": unlocked_colors}
+                for color in soup.select("div.mycolor-list__set-btn > form > input"):
+                    unlocked_colors.append(int(color["value"]))
+                setting_value = {"current": get_int(soup.select_one(".current-mycolor__icon > img")["src"]), "unlocked": unlocked_colors}
+            elif setting == "touchEffectPop":
+                unlocked_effects = []
+                for effect in soup.select("div.toucheffect-list__set-btn > form > input"):
+                    unlocked_effects.append(int(effect["value"]))
+                setting_value = {"current": get_int(soup.select_one(".current-toucheffect__icon > img")["src"]), "unlocked": unlocked_effects}
+            elif setting in ["slideColorInvert","touchEffectShoot","keyBeam","rNoteEffect"]:
+                setting_value = int(soup.select_one("div.option_image_select_content.selected > input")["value"]) == 1
+            else:
+                setting_value = int(soup.select_one("div.option_image_select_content.selected > input")["value"])
 
             design_settings[setting] = setting_value
 
         print(design_settings)
-        """
 
-        #self.response = requests.request("GET", "https://wacca.marv-games.jp/web/option/designSetting", headers=self.gen_cookie())
-        #soup = BeautifulSoup(self.response.text, 'lxml')
+        print("* Sound...")
 
-        #print("* Sound...")
-        #self.response = requests.request("GET", "https://wacca.marv-games.jp/web/option/soundSetting", headers=self.gen_cookie())
-        #soup = BeautifulSoup(self.response.text, 'lxml')
+        for setting in sound_settings:
+            self.response = requests.request("GET", "https://wacca.marv-games.jp/web/option/{0}".format(setting), headers=self.gen_cookie())
+            soup = BeautifulSoup(self.response.text, 'lxml')
+
+            setting_value = None
+
+            if setting == "noteTouchSe":
+                unlocked_sounds = []
+                for sound in soup.select("div.se-list__bottom > form > input"):
+                    unlocked_sounds.append(int(sound["value"]))
+                setting_value = {"current": get_int(soup.select_one(".current-se__stop-btn > a > audio > source")["src"]), "unlocked": unlocked_sounds}
+            elif setting == "charaSound":
+                setting_value = int(soup.select_one('option[selected]')["value"]) == 1
+            else:
+                setting_value = int(soup.select_one('option[selected]').text)
+
+            sound_settings[setting] = setting_value
+
+        print(sound_settings)
 
 
     def scrape(self):
         self.get_user_info()
-        #self.get_song_data()
-        #self.get_recent_plays()
-        #self.get_icons()
+        self.get_song_data()
+        self.get_recent_plays()
+        self.get_icons()
         self.get_settings()
+        print(time.perf_counter() - self._start_time)
         #print(self.__dict__)
 
     def progress(self):
@@ -355,6 +401,7 @@ class User:
 
     def __init__(self, id):
         self.id = id
+        self._start_time = time.perf_counter()
         self.login_request()
         self.gen_cookie()
         self.timestamp = time.time()

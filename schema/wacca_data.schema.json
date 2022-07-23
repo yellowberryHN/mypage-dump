@@ -197,7 +197,19 @@
                   "type": "boolean"
                 },
                 "touchEffectPop": {
-                  "type": "boolean"
+                  "type": "object",
+                  "properties": {
+                    "current": {
+                      "type": "integer",
+                    },
+                    "unlocked": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer"
+                      }
+                    }
+                  },
+                  "required": ["current", "unlocked"]
                 },
                 "touchEffectShoot": {
                   "type": "boolean"
