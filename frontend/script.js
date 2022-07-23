@@ -35,11 +35,11 @@ function updateProgress(userId) {
 
   http.onload = () => {
     let progressJson = JSON.parse(http.responseText)
-    if(!progressJson.bests_total == undefined || !progressJson.bests_total == 0) {
-      bests.setText(progressJson.bests_completed + "/" + progressJson.bests_total)
-      bests.animate(progressJson.bests_completed / progressJson.bests_total)
-      if(progressJson.bests_completed == progressJson.bests_total) {
-        bests.setText('Completed!')
+    if(!progressJson.songs_total == undefined || !progressJson.songs_total == 0) {
+      songs.setText(progressJson.songs_completed + "/" + progressJson.songs_total)
+      songs.animate(progressJson.songs_completed / progressJson.songs_total)
+      if(progressJson.songs_completed == progressJson.songs_total) {
+        songs.setText('Completed!')
         document.getElementById("progress-container").classList.add("hidden")
         loadUserData(userId)
         setTimeout(function(){document.getElementById("ui").classList.add("visible")}, 1000)
@@ -79,6 +79,6 @@ function downloadDump() {
   console.log("downloading dump")
 }
 
-let bests = newBar("progress1");
+let songs = newBar("progress1");
 let userId = new URLSearchParams(location.search).get("id");
 let updateInterval = setInterval(updateProgress, 1000, userId);

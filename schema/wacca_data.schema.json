@@ -67,10 +67,14 @@
               "type": "object",
               "properties": {
                 "noteSpeed": {
-                  "type": "number"
+                  "type": "number",
+                  "minimum": 1.0,
+                  "maximum": 6.0
                 },
                 "judgeLineTiming": {
-                  "type": "number"
+                  "type": "number",
+                  "minimum": -10.0,
+                  "maximum": 10.0
                 },
                 "mask": {
                   "type": "integer",
@@ -318,6 +322,14 @@
           },
           "minItems": 1
         },
+        "favorites": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 1,
+          "maxItems": 100
+        },
         "recents": {
           "description": "A list of up to 50 of the most recent plays, and their score breakdown",
           "type": "array",
@@ -392,6 +404,19 @@
           "type": "array",
           "items": {
             "type": "integer"
+          },
+          "minItems": 1
+        },
+        "boxes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              }
+            },
+            "required": ["id"]
           },
           "minItems": 1
         }

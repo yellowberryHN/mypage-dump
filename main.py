@@ -20,7 +20,6 @@ Left to implement:
 - trophies
 - total high score (added up all of scores?)
 - special song unlocks [/music/unlock]
-- favorites
 - gates
 
 """
@@ -50,11 +49,6 @@ class Progress:
         self.bests_total =  bests_total
         self.bests_completed = bests_completed
 
-class Emblem:
-    def __init__(self, stage, type):
-        self.stage = stage
-        self.type = type
-
 class Song:
     def __init__(self, id, name):
         self.id = id
@@ -75,11 +69,13 @@ class RecentPlay(Song):
         self.max_combo = max_combo
 
 class User:
+    # for internal use
+    wsid = None
+    response = None
+    songs_total = 0
+
     name = ""
-    wsid = ""
-    response = ""
-    personal_bests = []
-    personal_bests_total = 0
+    songs = []
     recents = []
     headers_form_encoded = {"Content-Type": "application/x-www-form-urlencoded"} 
 
@@ -97,7 +93,7 @@ class User:
         print("Getting player info...")
         self.response = requests.request("GET", "https://wacca.marv-games.jp/web/player", headers=self.gen_cookie())
 
-        soup = BeautifulSoup(self.response.text, 'html.parser')
+        soup = BeautifulSoup(self.response.text, 'lxml')
 
         self.name = soup.select_one('.user-info__detail__name').text
         self.title = soup.select_one('.user-info__detail__title').text
@@ -107,8 +103,7 @@ class User:
         stage = soup.select_one('.user-info__icon__stage img')
         if stage:
             tmp = re.search(r'stage_icon_(\d+)_(\d).png', stage["src"])
-            self.emblem = Emblem(tmp.group(1), tmp.group(2))
-            print(self.emblem.__dict__)
+            self.emblem = {"stage": tmp.group(1), "type": tmp.group(2)}
 
         pointlist = soup.select(".poss-wp")
         self.points = get_int(soup.select_one('.user-info__detail__wp').text)
@@ -118,28 +113,34 @@ class User:
         self.ex_tickets = int(soup.select_one('.user-info__detail__ex').text)
         self.icon = get_int(soup.select_one('.icon__image > img')["src"])
 
-    def get_personal_bests(self):
+        self.songs_total = int(soup.select_one('span.score-point__difficulty.difficulty__normal').text)
+
+    def get_song_data(self):
         print("Getting song list...")
         self.response = requests.request("GET", "https://wacca.marv-games.jp/web/music", headers=self.gen_cookie())
         
-        soup = BeautifulSoup(self.response.text, 'html.parser')
+        soup = BeautifulSoup(self.response.text, 'lxml')
         
         # Get song data from song list
-        songlist = soup.find_all("form",attrs={"name": re.compile("detail")}, limit=5)
+        songlist = soup.select(".playdata__score-list__wrap li.item", limit=self.songs_total)
 
-        self.personal_bests_total = len(songlist)
+        print("Getting favorites...")
+        self.favorites = []
+        favlist = soup.select(".playdata__score-list__wrap li.item.filter-favorite")
+        for element in favlist:
+            self.favorites.append(int(element.div.form.input["value"]))
 
-        print("Getting song data for {0} songs...".format(self.personal_bests_total))
+        print("Getting song data for {0} songs...".format(self.songs_total))
         for song in songlist:
-            self.personal_bests.append(self.scrape_personal_best(PersonalBest(int(song.input["value"]), song.parent.a.div.div.text)))
+            self.songs.append(self.scrape_song_data(PersonalBest(int(song.div.form.input["value"]), song.div.a.div.div.text)))
 
-    def scrape_personal_best(self, song):
+    def scrape_song_data(self, song):
         print("* <{0}> [{1}] ".format(song.id, song.name), end='')
 
         url = "https://wacca.marv-games.jp/web/music/detail"
         self.response = requests.request("POST", url, data = "musicId={0}".format(song.id), headers=self.headers_form_encoded | self.gen_cookie())
         
-        soup = BeautifulSoup(self.response.text, 'html.parser')
+        soup = BeautifulSoup(self.response.text, 'lxml')
         song.play_count = get_int(soup.select_one(".song-info__play-count > span").text)
     
         # Selector for difficulties
@@ -176,7 +177,7 @@ class User:
         print("Getting recent plays...")
         self.response = requests.request("GET", "https://wacca.marv-games.jp/web/history", headers=self.gen_cookie())
 
-        soup = BeautifulSoup(self.response.text, 'html.parser')
+        soup = BeautifulSoup(self.response.text, 'lxml')
 
         # Get song data from song list
         recentlist = soup.select(".playdata__history-list__wrap > li")
@@ -209,7 +210,7 @@ class User:
     def get_icons(self):
         print("Getting unlocked icons...")
         self.response = requests.request("GET", "https://wacca.marv-games.jp/web/icon", headers=self.gen_cookie())
-        soup = BeautifulSoup(self.response.text, 'html.parser')
+        soup = BeautifulSoup(self.response.text, 'lxml')
 
         self.icons = []
         icon_elements = soup.select(".collection__icon-list .item")
@@ -219,40 +220,144 @@ class User:
     def get_settings(self):
         print("Getting settings...")
 
-        # TODO: actually scrape this
+        game_settings = {
+            "noteSpeed": None, 
+            "judgeLineTiming": None, 
+            "mask": None, 
+            "movie": None, 
+            "bonusNoteEffect": None, 
+            "mirror": None, 
+            "giveup": None
+        }
+
+        display_settings = {
+            "judgePosition": None,
+            "judgeDetail": None,
+            "informationMask": None, 
+            "guideLineInterval": None, 
+            "guideLineMask": None, 
+            "guideMeasureLine": None, 
+            "centerDisplay": None,
+            "scoreDisplay": None,
+            "multiRankDisplay": None,
+            "emblemDisplay": None,
+            "rateDisplay": None,
+            "playerLevelDisplay": None,
+            "gateDirectingSkip": None,
+            "missionDirectingSkip": None
+        }
+
+
 
         print("* Game...")
-        self.response = requests.request("GET", "https://wacca.marv-games.jp/web/option/gameSetting", headers=self.gen_cookie())
-        soup = BeautifulSoup(self.response.text, 'html.parser')
+
+        for setting in game_settings:
+            self.response = requests.request("GET", "https://wacca.marv-games.jp/web/option/{0}".format(setting), headers=self.gen_cookie())
+            soup = BeautifulSoup(self.response.text, 'lxml')
+
+            setting_value = None
+
+            if setting in ["noteSpeed", "judgeLineTiming"]:
+                setting_value = float(soup.select_one('option[selected]').text)
+            elif setting == "mask":
+                setting_value = int(soup.select_one("div.option_image_select_content.selected > input")["value"])
+            elif setting in ["bonusNoteEffect", "mirror"]:
+                setting_value = int(soup.select_one('option[selected]')["value"]) == 1
+            elif setting == "movie":
+                movie_choices = ["ask", False, True]
+                setting_value = movie_choices[int(soup.select_one('option[selected]')["value"])]
+            else:
+                setting_value = int(soup.select_one('option[selected]')["value"])
+
+            game_settings[setting] = setting_value
+
+        print(game_settings)
 
         print("* Display...")
-        self.response = requests.request("GET", "https://wacca.marv-games.jp/web/option/displaySetting", headers=self.gen_cookie())
-        soup = BeautifulSoup(self.response.text, 'html.parser')
+        
 
+        for setting in display_settings:
+            self.response = requests.request("GET", "https://wacca.marv-games.jp/web/option/{0}".format(setting), headers=self.gen_cookie())
+            soup = BeautifulSoup(self.response.text, 'lxml')
+
+            setting_value = None
+
+            if setting in ["informationMask", "guideLineMask", "centerDisplay", "scoreDisplay"]:
+                setting_value = int(soup.select_one('option[selected]')["value"])
+            elif setting in ["multiRankDisplay", "emblemDisplay", "rateDisplay", "playerLevelDisplay", "gateDirectingSkip", "missionDirectingSkip"]:
+                setting_value = int(soup.select_one('option[selected]')["value"]) == 1
+            elif setting == "judgeDetail": 
+                setting_value = int(soup.select_one("div.option_image_select_content.selected > input")["value"]) == 1
+            else:
+                setting_value = int(soup.select_one("div.option_image_select_content.selected > input")["value"])
+
+            display_settings[setting] = setting_value
+
+        print(display_settings)
+
+        """
         print("* Design...")
-        self.response = requests.request("GET", "https://wacca.marv-games.jp/web/option/designSetting", headers=self.gen_cookie())
-        soup = BeautifulSoup(self.response.text, 'html.parser')
+        design_settings = {
+            "myColor": {
+                "current": None,
+                "unlocked": []
+            },
+            "noteWidth": None,
+            "touchNoteColor": None,
+            "chainNoteColor": None,
+            "slideNoteLeftColor": None,
+            "slideNoteRightColor": None,
+            "snapNoteUpColor": None,
+            "snapnoteDownColor": None,
+            "holdNoteColor": None,
+            "slideColorInvert": None,
+            "touchEffectPop": None,
+            "touchEffectShoot": None,
+            "keyBeam": None,
+            "rNoteEffect": None
+        }
 
-        print("* Sound...")
-        self.response = requests.request("GET", "https://wacca.marv-games.jp/web/option/soundSetting", headers=self.gen_cookie())
-        soup = BeautifulSoup(self.response.text, 'html.parser')
+        for setting in design_settings:
+            self.response = requests.request("GET", "https://wacca.marv-games.jp/web/option/{0}".format(setting), headers=self.gen_cookie())
+            soup = BeautifulSoup(self.response.text, 'lxml')
+
+            setting_value = None
+
+            if setting == "myColor":
+                # for loop all colors
+                unlocked_colors = []
+
+                setting_value = {"current": 0, "unlocked": unlocked_colors}
+
+            design_settings[setting] = setting_value
+
+        print(design_settings)
+        """
+
+        #self.response = requests.request("GET", "https://wacca.marv-games.jp/web/option/designSetting", headers=self.gen_cookie())
+        #soup = BeautifulSoup(self.response.text, 'lxml')
+
+        #print("* Sound...")
+        #self.response = requests.request("GET", "https://wacca.marv-games.jp/web/option/soundSetting", headers=self.gen_cookie())
+        #soup = BeautifulSoup(self.response.text, 'lxml')
 
 
     def scrape(self):
         self.get_user_info()
-        #self.get_personal_bests()
+        #self.get_song_data()
         #self.get_recent_plays()
-        self.get_icons()
-        print(self.__dict__)
+        #self.get_icons()
+        self.get_settings()
+        #print(self.__dict__)
 
     def progress(self):
-        return Progress(self.personal_bests_total, len(self.personal_bests))
+        return Progress(self.songs_total, len(self.songs))
 
     def __init__(self, id):
         self.id = id
         self.login_request()
-        self.gen_cookie()   
-        self.timestamp = time.time()     
+        self.gen_cookie()
+        self.timestamp = time.time()
 
 
 app = FastAPI()
@@ -267,6 +372,8 @@ def scrape_background(user_id):
 
 @app.post("/api/scrape")
 async def scrape(userId: str = Form(), background_tasks: BackgroundTasks = BackgroundTasks()):
+    if not userId.isdigit(): 
+        return Response(json={"error":"invalid id"}, status_code=400)
     background_tasks.add_task(scrape_background, userId)
 
     return RedirectResponse(url="/progress?id=" + userId, status_code=303)
@@ -287,7 +394,7 @@ async def get_basic_user(id: str):
             "name": user.name,
             "level": user.level,
             "title": user.title,
-            "points": user.points        
+            "points": user.points
         }
     else:
         return {"error": "User not found"}
