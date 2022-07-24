@@ -21,6 +21,9 @@
         "color": {
           "type": "integer"
         },
+        "plate": {
+          "type": "integer"
+        },
         "title": {
           "type": "string"
         },
@@ -413,6 +416,13 @@
           "required": ["normal", "special"]
         },
         "icons": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 1
+        },
+        "plates": {
           "type": "array",
           "items": {
             "type": "integer"
