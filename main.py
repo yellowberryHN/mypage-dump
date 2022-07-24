@@ -1,7 +1,7 @@
 import os, requests, re, time, codecs, jsons
 from fastapi import FastAPI, Form, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import RedirectResponse, Response, HTMLResponse
+from fastapi.responses import RedirectResponse, Response, HTMLResponse, FileResponse
 from jsmin import jsmin
 from bs4 import BeautifulSoup
 from user_agent import generate_user_agent
@@ -43,11 +43,17 @@ def get_int(string):
     return int(re.search(r'(\d+)', string).group(1))
 
 class DifficultyStats:
-    def __init__(self, score, rate, achieve, play_count):
+    def __init__(self, score, rating, achieve, play_count):
         self.score = score
-        self.rate = rate
+        self.rating = rating
         self.achieve = achieve
         self.play_count = play_count
+
+class BasicDifficultyStats:
+    def __init__(self, score, rating, achieve):
+        self.score = score
+        self.rating = rating
+        self.achieve = achieve
 
 class Progress:
     def __init__(self, bests_total, bests_completed) -> None:
@@ -60,8 +66,11 @@ class Song:
         self.__name = name
 
 class PersonalBest(Song):
-    play_count = 0
-    difficulties = []
+    def __init__(self, id, name):
+        self.id = id
+        self.__name = name
+        self.difficulties = []
+        self.play_count = 0
 
 class RecentPlay(Song):
     def __init__(self, id, name, timestamp, difficulty, judgements, timings, max_combo):
@@ -72,6 +81,16 @@ class RecentPlay(Song):
         self.judgements = judgements
         self.timings = timings
         self.max_combo = max_combo
+
+class Settings: 
+    def __init__(self, game, display, design, sound):
+        self.game = game
+        self.display = display
+        self.design = design
+        self.sound = sound
+
+
+
 
 class User:
     # for internal use
@@ -131,7 +150,7 @@ class User:
         soup = BeautifulSoup(self.__response.text, 'lxml')
         
         # Get song data from song list
-        songlist = soup.select(".playdata__score-list__wrap li.item", limit=20)# limit=self.__songs_total)
+        songlist = soup.select(".playdata__score-list__wrap li.item", limit=self.__songs_total)
 
         print("Getting favorites...")
         self.favorites = []
@@ -142,19 +161,44 @@ class User:
         if full_dump:
             print("Getting song data for {0} songs...".format(self.__songs_total))
             for song in songlist:
-                self.songs.append(self.scrape_song_data(PersonalBest(int(song.div.form.input["value"]), song.div.a.div.div.text)))
+                yeah = PersonalBest(int(song.div.form.input["value"]), song.div.a.div.div.text)
+                self.songs.append(self.scrape_song_data(yeah))
         else:
             print("Getting song data for {0} songs [LITE]...".format(self.__songs_total))
             for song in songlist:
-                # TODO: write logic to parse song data from song list instead of making 7 billion requests
-                pass
+                yeah = PersonalBest(int(song.div.form.input["value"]), song.div.a.div.div.text)
+
+                diffs = ["normal", "hard", "expert", "inferno"]
+
+                for diff in diffs:
+                    score = get_int(song.select_one(f".song-info__bottom-wrap.difficulty__{diff} .playdata__score-list__song-info__score").text)
+
+                    # difficulty rate and achieve
+                    icons = song.select(f".playdata__score-list__icon.score__icon__{diff} > div")
+
+                    temp_rate = icons[0].img["src"].replace("/img/web/music/rate_icon/", "").split(".")[0]
+                    rate = 0
+
+                    if temp_rate.startswith("rate_"):
+                        rate = int(temp_rate.split("_")[1])
+                        
+                    temp_achieve = icons[1].img["src"].replace("/img/web/music/achieve_icon/", "").split(".")[0]
+                    achieve = 0
+
+                    if temp_achieve.startswith("achieve"):
+                        achieve = int(temp_achieve.replace("achieve",""))
+
+                    yeah.difficulties.append(BasicDifficultyStats(score, rate, achieve))
+
+                self.songs.append(yeah)
 
     def scrape_song_data(self, song):
         print(f"* <{song.id}> ", end='')
-        self.__response = requests.request("POST", f"{endpoint}/music/detail", data = "musicId={0}".format(song.id), headers=self.__headers_form_encoded | self.gen_cookie())
+        self.__response = requests.request("POST", f"{endpoint}/music/detail", data = f"musicId={song.id}", headers=self.__headers_form_encoded | self.gen_cookie())
         
         soup = BeautifulSoup(self.__response.text, 'lxml')
         song.play_count = get_int(soup.select_one(".song-info__play-count > span").text)
+        song.difficulties = [] # WHY THE FUCK IS THIS REQUIRED
     
         # Selector for difficulties
         diffs = soup.select(".score-detail__list__song-info")
@@ -182,9 +226,11 @@ class User:
                 achieve = int(temp_achieve.replace("achieve",""))
 
             diff_stats = DifficultyStats(score, rate, achieve, play_count)
+            print(diff_stats.__dict__)
             song.difficulties.append(diff_stats)
          
-        print("({0} diffs)".format(len(diffs))) # mark song as done
+        print("({0} diffs)".format(len(song.difficulties))) # mark song as done
+        return song
 
     def get_recent_plays(self):
         print("Getting recent plays...")
@@ -409,7 +455,9 @@ class User:
         self.get_plates()
         self.get_settings()
         print(time.perf_counter() - self.__start_time)
-        print(jsons.dump(self, key_transformer=jsons.KEY_TRANSFORMER_CAMELCASE, strip_privates=True))
+        f = open(f"dumps/{self.id}.json", "w")
+        f.write(jsons.dumps({"player": self}, key_transformer=jsons.KEY_TRANSFORMER_CAMELCASE, strip_privates=True))
+        f.close()
 
     def progress(self):
         return Progress(self.__songs_total, len(self.songs))
@@ -460,6 +508,14 @@ async def get_basic_user(id: str):
         }
     else:
         return {"error": "User not found"}
+
+@app.get("/api/download")
+async def download_file(id: str):
+    filepath = f"dumps/{id}.json"
+    if os.path.exists(filepath):
+        return FileResponse(path=filepath, filename=f"{id}.json", media_type='application/octet-stream')
+    else:
+        return {"error": "File not found"}
 
 @app.get("/book.js")
 async def get_bookmarklet():
