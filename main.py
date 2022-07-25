@@ -30,7 +30,7 @@ endpoint = endpoint if endpoint is not None else ""
 
 jst = pytz.timezone("Asia/Tokyo") # used for time conversion
 magic = codecs.decode("nvzrVq","rot-13") # hi sega
-full_dump = True # dump play count
+full_dump = False # dump play count
 
 difficulty_dict = {
     "NORMAL": 0,
@@ -56,9 +56,9 @@ class BasicDifficultyStats:
         self.achieve = achieve
 
 class Progress:
-    def __init__(self, bests_total, bests_completed) -> None:
-        self.bests_total =  bests_total
-        self.bests_completed = bests_completed
+    def __init__(self, songs_total, songs_completed) -> None:
+        self.songs_total =  songs_total
+        self.songs_completed = songs_completed
 
 class Song:
     def __init__(self, id, name):
@@ -89,8 +89,59 @@ class Settings:
         self.design = design
         self.sound = sound
 
+class GameSettings:
+    noteSpeed = None
+    judgeLineTiming = None
+    mask = None
+    movie = None
+    bonusNoteEffect = None
+    mirror = None
+    giveup = None
 
+class DisplaySettings:
+    judgePosition = None
+    judgeDetail = None
+    informationMask = None 
+    guideLineInterval = None 
+    guideLineMask = None 
+    guideMeasureLine = None 
+    centerDisplay = None
+    scoreDisplay = None
+    multiRankDisplay = None
+    emblemDisplay = None
+    rateDisplay = None
+    playerLevelDisplay = None
+    gateDirectingSkip = None
+    missionDirectingSkip = None
 
+class DesignSettings:
+    myColor = { "current": None, "unlocked": [] }
+    noteWidth = None
+    touchNoteColor = None
+    chainNoteColor = None
+    slideNoteLeftColor = None
+    slideNoteRightColor = None
+    snapNoteUpColor = None
+    snapNoteDownColor = None
+    holdNoteColor = None
+    slideColorInvert = None
+    touchEffectPop = None
+    touchEffectShoot = None
+    keyBeam = None
+    rNoteEffect = None
+
+class SoundSettings:
+    noteTouchSe = None
+    bgmVolume = None
+    guideSoundVolume = None
+    touchNoteVolume = None
+    holdNoteVolume = None
+    slideNoteVolume = None
+    snapNoteVolume = None
+    chainNoteVolume = None
+    bonusNoteVolume = None
+    charaSound = None
+    rNoteVolume = None
 
 class User:
     # for internal use
@@ -165,12 +216,15 @@ class User:
                 self.songs.append(self.scrape_song_data(yeah))
         else:
             print("Getting song data for {0} songs [LITE]...".format(self.__songs_total))
+
             for song in songlist:
                 yeah = PersonalBest(int(song.div.form.input["value"]), song.div.a.div.div.text)
 
                 diffs = ["normal", "hard", "expert", "inferno"]
 
                 for diff in diffs:
+                    if diff == "inferno" and soup.select_one(".diff_icon_inferno").text == "INFERNO 0":
+                        continue
                     score = get_int(song.select_one(f".song-info__bottom-wrap.difficulty__{diff} .playdata__score-list__song-info__score").text)
 
                     # difficulty rate and achieve
@@ -248,7 +302,7 @@ class User:
             #print(timestamp)
 
             name = song.select_one(".playdata__history-list__song-info__name").text
-            song_id = song.select_one("#musicId")["value"]
+            song_id = int(song.select_one("#musicId")["value"])
 
             diff = difficulty_dict[song.select_one(".playdata__history-list__song-info__lv").text.split(" ")[0]]
 
@@ -291,70 +345,11 @@ class User:
     def get_settings(self):
         print("Getting settings...")
 
-        game_settings = {
-            "noteSpeed": None, 
-            "judgeLineTiming": None, 
-            "mask": None, 
-            "movie": None, 
-            "bonusNoteEffect": None, 
-            "mirror": None, 
-            "giveup": None
-        }
-
-        display_settings = {
-            "judgePosition": None,
-            "judgeDetail": None,
-            "informationMask": None, 
-            "guideLineInterval": None, 
-            "guideLineMask": None, 
-            "guideMeasureLine": None, 
-            "centerDisplay": None,
-            "scoreDisplay": None,
-            "multiRankDisplay": None,
-            "emblemDisplay": None,
-            "rateDisplay": None,
-            "playerLevelDisplay": None,
-            "gateDirectingSkip": None,
-            "missionDirectingSkip": None
-        }
-
-        design_settings = {
-            "myColor": {
-                "current": None,
-                "unlocked": []
-            },
-            "noteWidth": None,
-            "touchNoteColor": None,
-            "chainNoteColor": None,
-            "slideNoteLeftColor": None,
-            "slideNoteRightColor": None,
-            "snapNoteUpColor": None,
-            "snapNoteDownColor": None,
-            "holdNoteColor": None,
-            "slideColorInvert": None,
-            "touchEffectPop": None,
-            "touchEffectShoot": None,
-            "keyBeam": None,
-            "rNoteEffect": None
-        }
-
-        sound_settings = {
-            "noteTouchSe": None,
-            "bgmVolume": None,
-            "guideSoundVolume": None,
-            "touchNoteVolume": None,
-            "holdNoteVolume": None,
-            "slideNoteVolume": None,
-            "snapNoteVolume": None,
-            "chainNoteVolume": None,
-            "bonusNoteVolume": None,
-            "charaSound": None,
-            "rNoteVolume": None
-        }
+        self.settings = Settings(GameSettings(), DisplaySettings(), DesignSettings(), SoundSettings())
 
         print("* Game...")
 
-        for setting in game_settings:
+        for setting in ["noteSpeed","judgeLineTiming","mask","movie","bonusNoteEffect","mirror","giveup"]:
             self.__response = requests.request("GET", f"{endpoint}/option/{setting}", headers=self.gen_cookie())
             soup = BeautifulSoup(self.__response.text, 'lxml')
 
@@ -372,13 +367,11 @@ class User:
             else:
                 setting_value = int(soup.select_one('option[selected]')["value"])
 
-            game_settings[setting] = setting_value
-
-        #print(game_settings)
+            setattr(self.settings.game, setting, setting_value)
 
         print("* Display...")
 
-        for setting in display_settings:
+        for setting in ["judgePosition","judgeDetail","informationMask","guideLineInterval","guideLineMask","guideMeasureLine","centerDisplay","scoreDisplay","multiRankDisplay","emblemDisplay","rateDisplay","playerLevelDisplay","gateDirectingSkip","missionDirectingSkip"]:
             self.__response = requests.request("GET", f"{endpoint}/option/{setting}", headers=self.gen_cookie())
             soup = BeautifulSoup(self.__response.text, 'lxml')
 
@@ -393,13 +386,11 @@ class User:
             else:
                 setting_value = int(soup.select_one("div.option_image_select_content.selected > input")["value"])
 
-            display_settings[setting] = setting_value
-
-        #print(display_settings)
+            setattr(self.settings.display, setting, setting_value)
 
         print("* Design...")
 
-        for setting in design_settings:
+        for setting in ["myColor","noteWidth","touchNoteColor","chainNoteColor","slideNoteLeftColor","slideNoteRightColor","snapNoteUpColor","snapNoteDownColor","holdNoteColor","slideColorInvert","touchEffectPop","touchEffectShoot","keyBeam","rNoteEffect"]:
             self.__response = requests.request("GET", f"{endpoint}/option/{setting}", headers=self.gen_cookie())
             soup = BeautifulSoup(self.__response.text, 'lxml')
 
@@ -420,13 +411,11 @@ class User:
             else:
                 setting_value = int(soup.select_one("div.option_image_select_content.selected > input")["value"])
 
-            design_settings[setting] = setting_value
-
-        #print(design_settings)
+            setattr(self.settings.design, setting, setting_value)
 
         print("* Sound...")
 
-        for setting in sound_settings:
+        for setting in ["noteTouchSe","bgmVolume","guideSoundVolume","touchNoteVolume","holdNoteVolume","slideNoteVolume","snapNoteVolume","chainNoteVolume","bonusNoteVolume","charaSound","rNoteVolume"]:
             self.__response = requests.request("GET", f"{endpoint}/option/{setting}", headers=self.gen_cookie())
             soup = BeautifulSoup(self.__response.text, 'lxml')
 
@@ -442,9 +431,9 @@ class User:
             else:
                 setting_value = int(soup.select_one('option[selected]').text)
 
-            sound_settings[setting] = setting_value
+            setattr(self.settings.sound, setting, setting_value)
 
-        #print(sound_settings)
+        print(self.settings.__dict__)
 
 
     def scrape(self):
@@ -474,7 +463,6 @@ app = FastAPI()
 app.mount("/static/", StaticFiles(directory="frontend", html=True), name="frontend")
 
 users = {}
-
 
 def scrape_background(user_id):
     users[user_id] = User(int(user_id))
@@ -520,7 +508,7 @@ async def download_file(id: str):
 @app.get("/book.js")
 async def get_bookmarklet():
     with open("book/main.js") as file:
-        return Response(content=jsmin(file.read()), media_type="text/javascript")
+        return Response(content=jsmin(file.read()), media_type="text/javascript", headers={"Access-Control-Allow-Origin": "*"})
 
 @app.get("/progress")
 async def progress(id: str):

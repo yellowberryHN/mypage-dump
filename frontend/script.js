@@ -30,7 +30,7 @@ function newBar(elementId) {
 function updateProgress(userId) {
   const http = new XMLHttpRequest()
 
-  http.open("GET", "http://localhost:8000/api/getProgress?id=" + userId)
+  http.open("GET", "https://w.yello.ooo/api/getProgress?id=" + userId)
   http.send()
 
   http.onload = () => {
@@ -53,7 +53,7 @@ function updateProgress(userId) {
 function loadUserData(userId) {
   const http = new XMLHttpRequest()
 
-  http.open("GET", "http://localhost:8000/api/getBasicUser?id=" + userId)
+  http.open("GET", "https://w.yello.ooo/api/getBasicUser?id=" + userId)
   http.send()
 
   http.onload = () => {
@@ -76,7 +76,21 @@ function loadUserData(userId) {
 }
 
 function downloadDump() {
-  console.log("downloading dump")
+  fetch('https://w.yello.ooo/api/download?id=' + userId)
+  .then(resp => resp.blob())
+  .then(blob => {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    // the filename you want
+    a.download = 'my_wacca_data.json';
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    console.log('downloading dump!'); // or you know, something with better UX...
+  })
+  .catch(() => alert('oh no, dump download failed!'));
 }
 
 let songs = newBar("progress1");

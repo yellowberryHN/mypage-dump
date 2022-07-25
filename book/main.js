@@ -1,16 +1,22 @@
 // there must be a semicolon at the end of every line
-let actionList = document.querySelectorAll('.fpm');
-let promptList = document.querySelectorAll('div:nth-child(2) > div:nth-child(1) > p:nth-child(2):not(.iziModal-header-subtitle)');
-document.querySelector('.login-select > p').textContent = "Select a profile to dump:";
-document.querySelector('.login-select > h2').textContent = "WACCA (MyPage Dump)";
-document.querySelector('.bottom_btn > ul > li > a').textContent = "Cancel";
+export function main() {
+   let actionList = document.querySelectorAll('.fpm');
+   let promptList = document.querySelectorAll('div:nth-child(2) > div:nth-child(1) > p:nth-child(2):not(.iziModal-header-subtitle)');
+   document.querySelector('.login-select > p').textContent = "Select a profile to dump:";
+   document.querySelector('.login-select > h2').textContent = "WACCA (MyPage Dump)";
+   document.querySelector('.bottom_btn > ul > li > a').textContent = "Cancel";
+   const style = document.createElement('style');
+   style.textContent = ".user-info__detail__lv, .user-info__detail__lv::after, .btn_pink { background: #4A004F !important; } .user-info__detail__name { color: red !important; }";
+   document.head.append(style);
 
-for (const actionKey of actionList) {
-   actionKey.action = "http://localhost:8000/api/scrape";
-   actionKey.querySelector("\x23\x61\x69\x6d\x65\x49\x64").name = "userId";
-   actionKey.querySelector('.btn_pink').style.backgroundColor = '#4A004F';
-}
+   for (const actionKey of actionList) {
+      actionKey.action = "https://w.yello.ooo/api/scrape";
+      actionKey.querySelector("\x23\x61\x69\x6d\x65\x49\x64").name = "userId";
+   }
 
-for (const promptKey of promptList) {
-    promptKey.innerHTML = "<b>Dump user data?</b>";
+   for (const promptKey of promptList) {
+       promptKey.innerHTML = "<b>Dump user data?</b>";
+   }
+
+   return;
 }

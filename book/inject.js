@@ -1,1 +1,1 @@
-javascript:(function(){import('https://example.com/book.js').then((obj)=>obj.main())})();
+javascript:(function(){import('https://w.yello.ooo/book.js').then((obj)=>obj.main())})();
