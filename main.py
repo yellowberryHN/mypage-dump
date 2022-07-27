@@ -17,10 +17,8 @@ import pytz
 
 Left to implement:
 - stage up
-- friends
 - titles
 - trophies
-- bingo
 
 """
 
@@ -92,6 +90,16 @@ class RecentPlay(Song):
         self.judgements = judgements
         self.timings = timings
         self.max_combo = max_combo
+
+class Friend:
+    def __init__(self, name, friend_code, level, rate, icon, color):
+        self.id = id
+        self.name = name
+        self.friend_code = friend_code
+        self.level = level
+        self.rate = rate
+        self.icon = icon
+        self.color = color
 
 class Box:
     def __init__(self, id):
@@ -200,7 +208,6 @@ class User:
     def get_user_info(self):
         print("Getting player info...")
         self.__response = requests.request("GET", f"{endpoint}/player", headers=self.gen_cookie())
-
         soup = BeautifulSoup(self.__response.text, 'lxml')
 
         self.name = soup.select_one('.user-info__detail__name').text
@@ -223,6 +230,11 @@ class User:
         self.color = get_int(soup.select_one('.symbol__color__base > img')["src"])
 
         self.__songs_total = int(soup.select_one('span.score-point__difficulty.difficulty__normal').text)
+
+        print("Getting mission stage...")
+        self.__response = requests.request("GET", f"{endpoint}/mission", headers=self.gen_cookie())
+        soup = BeautifulSoup(self.__response.text, 'lxml')
+        self.mission_stage = int(soup.select_one(".current-sheet-num > span").text)
 
     def get_song_data(self):
         print("Getting song list...")
@@ -455,7 +467,6 @@ class User:
         for gate in gates:
             self.gates.append(self.scrape_gate(int(gate["value"])))
 
-
     def scrape_gate(self, gate):
         print(f"* Scraping gate {gate}")
         self.__response = requests.request("POST", f"{endpoint}/gate/detail", data=f"gate_id={gate}", headers=self.gen_cookie() | self.__headers_form_encoded)
@@ -467,7 +478,26 @@ class User:
         items = soup.select(".open-icons li img")
         
         return Gate(gate, gate_level, gate_progress[0], gate_progress[1])
-        
+
+    def get_friends(self):
+        print("Getting friends...")
+        self.__response = requests.request("GET", f"{endpoint}/friend/list", headers=self.gen_cookie())
+        soup = BeautifulSoup(self.__response.text, 'lxml')
+
+        self.friends = []
+        friend_list = soup.select(".friend__playerdata")
+        for friend in friend_list:
+
+            friend_name = friend["data-friend_name"]
+            friend_code = int(friend.form.input["value"])
+            friend_level = get_int(friend.div.select_one(".user-info__detail__lv").text)
+            friend_rate = int(friend.div.select_one(".rating__data").text)
+            friend_icon = get_int(friend.div.select_one(".icon__image > img")["src"])
+            friend_color = get_int(friend.div.select_one(".symbol__color__base > img")["src"])
+
+            # TODO add favorite
+
+            self.friends.append(Friend(friend_name, friend_code, friend_level, friend_rate, friend_icon, friend_color))
 
     def get_settings(self):
         print("Getting settings...")
@@ -570,6 +600,7 @@ class User:
         self.get_boxes()
         self.get_gates()
         self.get_unlocks()
+        self.get_friends()
         self.get_settings()
         print(time.perf_counter() - self.__start_time)
         user_json = jsons.dumps({"player": self}, key_transformer=jsons.KEY_TRANSFORMER_CAMELCASE, strip_privates=True)

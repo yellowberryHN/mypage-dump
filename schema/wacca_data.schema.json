@@ -65,6 +65,9 @@
           "type": "integer",
           "maximum": 10
         },
+        "missionStage": {
+          "type": "integer"
+        },
 
         "settings": {
           "type": "object",
@@ -383,11 +386,15 @@
               },
               "color": {
                 "type": "integer"
+              },
+              "favorite": {
+                "type": "boolean"
               }
             },
             "required": ["name", "friendCode"]
           },
-          "minItems": 1
+          "minItems": 1,
+          "maxItems": 100
         },
         "titles": {
           "type": "object",
