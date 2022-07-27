@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.com/wacca_data.schema.json",
+  "$id": "https://w.yello.ooo/wacca_data.schema.json",
   "title": "WACCA Data",
   "description": "A format to store information regarding a player of a popular game",
   "type": "object",
@@ -22,6 +22,9 @@
           "type": "integer"
         },
         "plate": {
+          "type": "integer"
+        },
+        "navigator": {
           "type": "integer"
         },
         "title": {
@@ -84,7 +87,7 @@
                   "maximum": 4
                 },
                 "movie": {
-                  "type": ["boolean","string"],
+                  "type": ["boolean", "string"],
                   "enum": [true, false, "ask"]
                 },
                 "bonusNoteEffect": {
@@ -122,7 +125,7 @@
                   "maximum": 5
                 },
                 "guideMeasureLine": {
-                  "type": "boolean",
+                  "type": "boolean"
                 },
                 "centerDisplay": {
                   "type": "integer",
@@ -133,7 +136,7 @@
                   "maximum": 1
                 },
                 "multiRankDisplay": {
-                  "type": "boolean",
+                  "type": "boolean"
                 },
                 "emblemDisplay": {
                   "type": "boolean"
@@ -159,7 +162,7 @@
                   "type": "object",
                   "properties": {
                     "current": {
-                      "type": "integer",
+                      "type": "integer"
                     },
                     "unlocked": {
                       "type": "array",
@@ -203,7 +206,7 @@
                   "type": "object",
                   "properties": {
                     "current": {
-                      "type": "integer",
+                      "type": "integer"
                     },
                     "unlocked": {
                       "type": "array",
@@ -325,6 +328,9 @@
                     },
                     "playCount": {
                       "type": "integer"
+                    },
+                    "leaderboard": {
+                      "type": "integer"
                     }
                   },
                   "required": ["score"]
@@ -429,6 +435,47 @@
           },
           "minItems": 1
         },
+        "navigators": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 1
+        },
+        "unlocks": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "totalHighScore": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "gates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "level": {
+                "type": "integer"
+              },
+              "progress": {
+                "type": "integer"
+              },
+              "progressMax": {
+                "type": "integer"
+              }
+            }
+          }
+        },
         "boxes": {
           "type": "array",
           "items": {
@@ -436,6 +483,26 @@
             "properties": {
               "id": {
                 "type": "integer"
+              },
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string"
+                    },
+                    "amount": {
+                      "type": "integer"
+                    },
+                    "unlocked": {
+                      "type": "boolean"
+                    }
+                  }
+                }
               }
             },
             "required": ["id"]
@@ -444,7 +511,7 @@
         }
       },
       "required": ["id", "name"]
-    },
+    }
   },
   "required": ["player"]
 }

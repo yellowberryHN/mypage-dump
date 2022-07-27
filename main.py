@@ -1,10 +1,13 @@
-import os, requests, re, time, codecs, jsons
+import os, requests, re, time, codecs, json, jsons
 from fastapi import FastAPI, Form, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse, Response, HTMLResponse, FileResponse
 from jsmin import jsmin
 from bs4 import BeautifulSoup
 from user_agent import generate_user_agent
+
+# validation
+from jsonschema import validate
 
 # time stuff
 from datetime import datetime
@@ -16,12 +19,8 @@ Left to implement:
 - stage up
 - friends
 - titles
-- navs
 - trophies
-- boxes
-- total high score (added up all of scores?)
-- special song unlocks [/music/unlock]
-- gates
+- bingo
 
 """
 
@@ -39,15 +38,27 @@ difficulty_dict = {
     "INFERNO": 3
 }
 
+box_item_types = {
+    "マイカラー": "myColor",
+    "ノーツタッチSE": "noteTouchSe",
+    "アイコン": "icon",
+    "称号": "title",
+    "プレート": "plate"
+}
+
 def get_int(string):
-    return int(re.search(r'(\d+)', string).group(1))
+    if any(char.isdigit() for char in string):
+        return int(re.search(r'(\d+)', string).group(1))
+    else:
+        raise TypeError(f"Integer not found in \"{string}\"")
 
 class DifficultyStats:
-    def __init__(self, score, rating, achieve, play_count):
+    def __init__(self, score, rating, achieve, play_count, leaderboard):
         self.score = score
         self.rating = rating
         self.achieve = achieve
         self.play_count = play_count
+        self.leaderboard = leaderboard
 
 class BasicDifficultyStats:
     def __init__(self, score, rating, achieve):
@@ -81,6 +92,25 @@ class RecentPlay(Song):
         self.judgements = judgements
         self.timings = timings
         self.max_combo = max_combo
+
+class Box:
+    def __init__(self, id):
+        self.id = id
+        self.items = []
+
+class BoxItem:
+    def __init__(self, name, type, amount, unlocked):
+        self.name = name
+        self.type = type
+        self.amount = amount
+        self.unlocked = unlocked
+
+class Gate:
+    def __init__(self, id, level, points, points_max):
+        self.id = id
+        self.level = level
+        self.points = points
+        self.points_max = points_max
 
 class Settings: 
     def __init__(self, game, display, design, sound):
@@ -156,7 +186,7 @@ class User:
     def login_request(self):
         print("Logging in with user ID {0}...".format(self.id))
         print(f"Using user agent: '{self.__ua}'")
-        self.__response = requests.request("POST", f"{endpoint}/login/exec", data = "{0}={1}".format(magic, self.id), headers=self.__headers_form_encoded | {"User-Agent": self.__ua})
+        self.__response = requests.request("POST", f"{endpoint}/login/exec", data=f"{magic}={self.id}", headers=self.__headers_form_encoded | {"User-Agent": self.__ua})
         
     def gen_cookie(self):
         if "Set-Cookie" in self.__response.headers:
@@ -209,6 +239,8 @@ class User:
         for element in favlist:
             self.favorites.append(int(element.div.form.input["value"]))
 
+        self.total_high_scores = [0, 0, 0, 0]
+
         if full_dump:
             print("Getting song data for {0} songs...".format(self.__songs_total))
             for song in songlist:
@@ -223,9 +255,10 @@ class User:
                 diffs = ["normal", "hard", "expert", "inferno"]
 
                 for diff in diffs:
-                    if diff == "inferno" and soup.select_one(".diff_icon_inferno").text == "INFERNO 0":
+                    if diff == "inferno" and song.select_one(".diff_icon_inferno").text == "INFERNO 0":
                         continue
                     score = get_int(song.select_one(f".song-info__bottom-wrap.difficulty__{diff} .playdata__score-list__song-info__score").text)
+                    self.total_high_scores[diffs.index(diff)] += score
 
                     # difficulty rate and achieve
                     icons = song.select(f".playdata__score-list__icon.score__icon__{diff} > div")
@@ -245,6 +278,7 @@ class User:
                     yeah.difficulties.append(BasicDifficultyStats(score, rate, achieve))
 
                 self.songs.append(yeah)
+            print(self.total_high_scores)
 
     def scrape_song_data(self, song):
         print(f"* <{song.id}> ", end='')
@@ -260,6 +294,7 @@ class User:
         for diff in diffs:
             play_count = get_int(diff.select_one(".song-info__top__play-count").text)
             score = get_int(diff.select_one(".song-info__score").text)
+            self.total_high_scores[diffs.index(diff)] += score
             
             # difficulty name
             # print(diff.select_one(".song-info__top__lv > div").text)
@@ -279,8 +314,20 @@ class User:
             if temp_achieve.startswith("achieve"):
                 achieve = int(temp_achieve.replace("achieve",""))
 
-            diff_stats = DifficultyStats(score, rate, achieve, play_count)
+            self.__response = requests.request("POST", f"{endpoint}/ranking/musicHighScore/detail", data = f"musicId={song.id}&rankCategory={diffs.index(diff)+1}", headers=self.__headers_form_encoded | self.gen_cookie())
+            soup = BeautifulSoup(self.__response.text, 'lxml')
+
+            temp_lb = soup.select_one(".ranking__score__rank.top-rank").text.strip()
+
+            lb_img = soup.select_one(".ranking__score__rank.top-rank > img")
+            if lb_img is not None and "ranking/icon-" in lb_img["src"]:
+                leaderboard = get_int(soup.select_one(".ranking__score__rank.top-rank > img")["src"])
+            else:
+                leaderboard = get_int(temp_lb) if temp_lb != "-位" else 0
+
+            diff_stats = DifficultyStats(score, rate, achieve, play_count, leaderboard)
             print(diff_stats.__dict__)
+
             song.difficulties.append(diff_stats)
          
         print("({0} diffs)".format(len(song.difficulties))) # mark song as done
@@ -341,6 +388,86 @@ class User:
         plate_elements = soup.select(".collection__nameplate-list .nameplate_item")
         for plate in plate_elements:
             self.plates.append(int(plate["data-nameplate_id"]))
+
+    def get_navigators(self):
+        print("Getting unlocked navigators...")
+        self.__response = requests.request("GET", f"{endpoint}/naviCharacter", headers=self.gen_cookie())
+        soup = BeautifulSoup(self.__response.text, 'lxml')
+
+        self.navigator = get_int(soup.select_one(".current-navi-character__icon").img["src"])
+
+        self.navigators = []
+        navi_elements = soup.select(".collection__navi-character-list #naviCharacterId")
+        for navi in navi_elements:
+            self.navigators.append(int(navi["value"]))
+
+    def get_boxes(self):
+        print("Getting box stats...")
+        self.__response = requests.request("GET", f"{endpoint}/box", headers=self.gen_cookie())
+        soup = BeautifulSoup(self.__response.text, 'lxml')
+
+        boxes = soup.select(".box__banner #boxId")
+
+        self.boxes = []
+
+        for box in boxes:
+            self.boxes.append(self.scrape_box(int(box["value"])))
+
+    def scrape_box(self,box):
+        #print(f"* Scraping box {box}...")
+        self.__response = requests.request("POST", f"{endpoint}/box/detail", data=f"boxId={box}", headers=self.gen_cookie() | self.__headers_form_encoded)
+        soup = BeautifulSoup(self.__response.text, 'lxml')
+
+        items = soup.select(".box__box-list .box-list__title-list li")
+
+        box_item = Box(box)
+
+        #print(f"{len(items)} items")
+        for item in items:
+            item_name = item.p.text
+            item_type = box_item_types[item.select_one(".title-list__bottom .title-list__title").text.strip()]
+            item_meta = item.select_one(".title-list__bottom .title-list__num").text.strip()
+            item_amount = get_int(item_meta) if item_meta != "未獲得" else 0 
+            item_unlocked = item.get("class") != ["unacquired"]
+
+            box_item.items.append(BoxItem(item_name, item_type, item_amount, item_unlocked))
+            #print(f"- {item_name} ({item_type}) [{item_amount}] <{item_unlocked}>")
+        return box_item
+
+    def get_unlocks(self):
+        print("Getting unlocked special songs...")
+        self.__response = requests.request("GET", f"{endpoint}/music/unlock", headers=self.gen_cookie())
+        soup = BeautifulSoup(self.__response.text, 'lxml')
+
+        self.unlocks = []
+        icon_elements = soup.select(".song-open__song-list .song-list__list-wrap .item-content:not(.is-lock) .song-list__song-icon img")
+        for icon in icon_elements:
+            self.unlocks.append(get_int(icon["src"]))
+
+    def get_gates(self):
+        print("Getting gate infomation...")
+        self.__response = requests.request("GET", f"{endpoint}/gate", headers=self.gen_cookie())
+        soup = BeautifulSoup(self.__response.text, 'lxml')
+
+        gates = soup.select(".gate__list__wrap #gate_id")
+
+        self.gates = []
+        for gate in gates:
+            self.gates.append(self.scrape_gate(int(gate["value"])))
+
+
+    def scrape_gate(self, gate):
+        print(f"* Scraping gate {gate}")
+        self.__response = requests.request("POST", f"{endpoint}/gate/detail", data=f"gate_id={gate}", headers=self.gen_cookie() | self.__headers_form_encoded)
+        soup = BeautifulSoup(self.__response.text, 'lxml')
+
+        gate_level = get_int(soup.select_one(".progress-circle").text)
+        gate_progress = list(map(int, soup.select_one(".progress-count").text.split("/")))
+
+        items = soup.select(".open-icons li img")
+        
+        return Gate(gate, gate_level, gate_progress[0], gate_progress[1])
+        
 
     def get_settings(self):
         print("Getting settings...")
@@ -433,19 +560,22 @@ class User:
 
             setattr(self.settings.sound, setting, setting_value)
 
-        print(self.settings.__dict__)
-
-
     def scrape(self):
         self.get_user_info()
         self.get_song_data()
         self.get_recent_plays()
         self.get_icons()
         self.get_plates()
+        self.get_navigators()
+        self.get_boxes()
+        self.get_gates()
+        self.get_unlocks()
         self.get_settings()
         print(time.perf_counter() - self.__start_time)
+        user_json = jsons.dumps({"player": self}, key_transformer=jsons.KEY_TRANSFORMER_CAMELCASE, strip_privates=True)
+        validate(instance=jsons.loads(user_json), schema=json.loads(open("schema/wacca_data.schema.json", "r").read()))
         f = open(f"dumps/{self.id}.json", "w")
-        f.write(jsons.dumps({"player": self}, key_transformer=jsons.KEY_TRANSFORMER_CAMELCASE, strip_privates=True))
+        f.write(user_json)
         f.close()
 
     def progress(self):
