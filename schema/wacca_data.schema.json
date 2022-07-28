@@ -358,7 +358,10 @@
           "description": "A list of up to 50 of the most recent plays, and their score breakdown",
           "type": "array",
           "items": {
-            "type": "object"
+            "type": "object",
+            "properties": {
+              "INCOMPLETE"
+            }
           },
           "minItems": 1,
           "maxItems": 50

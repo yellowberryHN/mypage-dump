@@ -28,6 +28,9 @@ endpoint = endpoint if endpoint is not None else ""
 jst = pytz.timezone("Asia/Tokyo") # used for time conversion
 magic = codecs.decode("nvzrVq","rot-13") # hi sega
 full_dump = False # dump play count
+check_valid = True # validate json output against schema
+
+extra_langs = ["jp"]
 
 difficulty_dict = {
     "NORMAL": 0,
@@ -82,14 +85,27 @@ class PersonalBest(Song):
         self.play_count = 0
 
 class RecentPlay(Song):
-    def __init__(self, id, name, timestamp, difficulty, judgements, timings, max_combo):
+    def __init__(self, id, score, name, timestamp, difficulty, judgements, timings, max_combo):
         self.id = id 
         self.__name = name
+        self.score = score
         self.timestamp = timestamp
         self.difficulty = difficulty
         self.judgements = judgements
         self.timings = timings
         self.max_combo = max_combo
+
+class StageUpSong(Song):
+    def __init__(self, id, name, score):
+        self.id = id
+        self.__name = name
+        self.score = score
+
+class StageUp:
+    def __init__(self, id, leaderboard)
+        self.id = id
+        self.leaderboard = leaderboard
+    songs = []
 
 class Friend:
     def __init__(self, name, friend_code, level, rate, icon, color):
@@ -253,6 +269,7 @@ class User:
 
         self.total_high_scores = [0, 0, 0, 0]
 
+        self.songs = []
         if full_dump:
             print("Getting song data for {0} songs...".format(self.__songs_total))
             for song in songlist:
@@ -592,19 +609,20 @@ class User:
 
     def scrape(self):
         self.get_user_info()
-        self.get_song_data()
+        #self.get_song_data()
         self.get_recent_plays()
-        self.get_icons()
-        self.get_plates()
-        self.get_navigators()
-        self.get_boxes()
-        self.get_gates()
-        self.get_unlocks()
-        self.get_friends()
-        self.get_settings()
+        #self.get_icons()
+        #self.get_plates()
+        #self.get_navigators()
+        #self.get_boxes()
+        #self.get_gates()
+        #self.get_unlocks()
+        #self.get_friends()
+        #self.get_settings()
         print(time.perf_counter() - self.__start_time)
         user_json = jsons.dumps({"player": self}, key_transformer=jsons.KEY_TRANSFORMER_CAMELCASE, strip_privates=True)
-        validate(instance=jsons.loads(user_json), schema=json.loads(open("schema/wacca_data.schema.json", "r").read()))
+        if check_valid:
+            validate(instance=jsons.loads(user_json), schema=json.loads(open("schema/wacca_data.schema.json", "r").read()))
         f = open(f"dumps/{self.id}.json", "w")
         f.write(user_json)
         f.close()
@@ -626,23 +644,27 @@ app.mount("/static/", StaticFiles(directory="frontend", html=True), name="fronte
 users = {}
 
 def scrape_background(user_id):
-    users[user_id] = User(int(user_id))
+    users[user_id] = User(user_id)
     users[user_id].scrape()
 
 @app.post("/api/scrape")
 async def scrape(userId: str = Form(), background_tasks: BackgroundTasks = BackgroundTasks()):
     if not userId.isdigit(): 
         return Response(json={"error":"invalid id"}, status_code=400)
-    background_tasks.add_task(scrape_background, userId)
+    if int(userId) not in users:
+        background_tasks.add_task(scrape_background, int(userId))
 
     return RedirectResponse(url="/progress?id=" + userId, status_code=303)
 
 @app.get("/api/getProgress")
 async def get_progress(id: str):
-    if id in users.keys():
-        return users[id].progress()
+    if id.isdigit():
+        if int(id) in users.keys():
+            return users[int(id)].progress()
+        else:
+            return Response(json={"error": "user not found"}, status_code=404)
     else:
-        return {"error": "User not found"}
+        return Response(json={"error": "invalid id"}, status_code=400)
 
 @app.get("/api/getBasicUser")
 async def get_basic_user(id: str):
@@ -667,15 +689,27 @@ async def download_file(id: str):
         return {"error": "File not found"}
 
 @app.get("/book.js")
-async def get_bookmarklet():
-    with open("book/main.js") as file:
+async def get_bookmarklet(lang: str="en"):
+    filename = "book/main.js"
+    if lang in extra_langs:
+        filename = f"book/main-{lang}.js"
+    with open(filename) as file:
         return Response(content=jsmin(file.read()), media_type="text/javascript", headers={"Access-Control-Allow-Origin": "*"})
 
 @app.get("/progress")
-async def progress(id: str):
-    with open("frontend/index.html") as file:
+async def progress(id: str, lang: str = "en"):
+    filename = "frontend/progress.html"
+    if lang in extra_langs:
+        filename = f"frontend/progress-{lang}.html"
+    with open(filename) as file:
         return HTMLResponse(file.read(), status_code=200)
 
 @app.get("/")
 async def read_index():
-    return RedirectResponse(url="/static/index.html")
+    with open("frontend/index.html") as file:
+        return HTMLResponse(file.read(), status_code=200)
+
+@app.get("/jp/")
+async def read_index_jp():
+    with open("frontend/index-jp.html") as file:
+        return HTMLResponse(file.read(), status_code=200)

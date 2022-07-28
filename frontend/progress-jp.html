@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="jp">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>マイページダンパー</title>
+  <link href="/static/migrated.css" rel="stylesheet">
+</head>
+
+<body>
+  <div id="progress-container">
+    進捗
+    <div class="progress-circle" id="progress1"></div>
+  </div>
+  
+  <div id="ui">
+    <div class='container'>
+      <div id='pushobj'>
+          <section class="login-select">
+              <h2>マイページダンパー</h2>
+              <ul class="select-acount">
+                  <div class="btn login" data-iziModal-open="#modal_login0">
+                      <li>
+                          <div class="user-info__icon">
+                              <div class="user-info__icon__stage"></div>
+                              <div class="symbol__color__base">
+                                  <img src="/static/assets/303001.png" alt="symbol_color" class="">
+                                  <div class="icon__image">
+                                      <img src="/static/assets/icon.png" alt="icon" class="">
+                                  </div>
+                              </div>
+                          </div>
+                          <div class="user-info__detail">
+                              <div class="user-info__detail__wrap">
+                                  <div class="user-info__detail__lv" id="level">Lv.0</div>
+                                  <div class="user-info__detail__name" id="name">name</div>
+                              </div>
+                              <div class="user-info__detail__title" id="title">title</div>
+                              <div class="user-info__detail__wrap">
+                                  <div class="user-info__detail__wp">
+                                    <img src="/static/assets/rp.png" width="20">
+                                    <div id="points">0</div><span>RP</span>
+                                  </div>
+                              </div>
+                          </div>
+                      </li>
+                  </div>
+              </ul>
+          </section>
+          <section class="bottom_btn">
+              <ul>
+                  <li>
+                      <a onclick="downloadDump()">ダウンロード</a>
+                  </li>
+              </ul>
+          </section>
+      </div>
+  </div>
+  </div>
+
+  
+
+  <script src="https://cdn.rawgit.com/kimmobrunfeldt/progressbar.js/1.0.1/dist/progressbar.js"></script>
+  <script src="/static/script.js"></script>
+</body>
+
+</html>

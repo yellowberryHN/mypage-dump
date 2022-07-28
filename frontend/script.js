@@ -22,7 +22,6 @@ function newBar(elementId) {
       }
   
     });
-  bar.text.style.fontFamily = '"Raleway", Helvetica, sans-serif';
   bar.text.style.fontSize = '2rem';
   return bar
 }
