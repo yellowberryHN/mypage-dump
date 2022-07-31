@@ -223,6 +223,165 @@ a {
   padding: 4px 4px;
 }
 
+.login h2 {
+  width: 90%;
+  background-color: #000;
+  line-height: 28px;
+  padding-left: 2%;
+  color: #FFF;
+  font-size: 0.8em;
+  margin: 15px auto;
+}
+.login .information {
+  width: 90%;
+  margin: 0 auto;
+}
+.login .information .information__tab {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: left;
+  -ms-flex-pack: left;
+  justify-content: left;
+  z-index: 100;
+  margin-bottom: 2px;
+  padding-left: 10px;
+}
+.login .information .information__tab li {
+  cursor: pointer;
+}
+.login .information .information__tab li.btn__update {
+  display: block;
+  color: #000;
+  background-color: #f7d000;
+  width: 98px;
+  -webkit-box-shadow: 0 0 0 2px #FFF, 4px -2px 0px 1px #9E9E9E, -2px -2px 0px 1px #9E9E9E;
+  box-shadow: 0 0 0 2px #FFF, 4px -2px 0px 1px #9E9E9E, -2px -2px 0px 1px #9E9E9E;
+  line-height: 22px;
+  border-radius: 8px 8px 0 0;
+  font-size: 0.7em;
+  text-align: center;
+  text-decoration: none;
+  font-weight: bold;
+}
+.login .information .information__tab li.btn__news {
+  display: block;
+  color: #FFF;
+  background-color: #1AA9EC;
+  background: -moz-linear-gradient(top, #3FBCF9, #069DE5);
+  background: -webkit-linear-gradient(top, #3FBCF9, #069DE5);
+  background: linear-gradient(to bottom, #3FBCF9, #069DE5);
+  width: 98px;
+  -webkit-box-shadow: 0 0 0 2px #FFF, 4px -2px 0px 1px #9E9E9E, -2px -2px 0px 1px #9E9E9E;
+  box-shadow: 0 0 0 2px #FFF, 4px -2px 0px 1px #9E9E9E, -2px -2px 0px 1px #9E9E9E;
+  line-height: 22px;
+  border-radius: 8px 8px 0 0;
+  font-size: 0.7em;
+  text-align: center;
+  text-decoration: none;
+  font-weight: bold;
+}
+.login .information .information__tab li.is-active {
+  z-index: 10;
+}
+.login .information .information__tab li:first-child {
+  margin-right: 6px;
+}
+.login .information .information__body {
+  width: 98%;
+  margin: 0 auto;
+  -webkit-box-shadow: 0 0 0 2px #FFF,
+  0 0 0 4px #9E9E9E;
+  box-shadow: 0 0 0 2px #FFF,
+  0 0 0 4px #9E9E9E;
+  height: auto;
+  border-radius: 8px;
+  display: none;
+  font-size: 0.8em;
+}
+.login .information .information__body.info-update {
+  background-color: #f7d000;
+}
+.login .information .information__body.info-news {
+  background-color: #1AA9EC;
+}
+.login .information .information__body.is-show {
+  display: block;
+}
+.login .information .information__body ul {
+  width: 95%;
+  margin: 0 auto;
+  padding-top: 0px;
+}
+.information .information__body ul li {
+  background-color: #FFF;
+  min-height: 38px;
+  margin-bottom: 2px;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  padding: 1%;
+  overflow: hidden;
+}
+.information .information__body ul li div {
+  padding-left: 5px;
+}
+.information .information__body ul li .info-title {
+  color: #F31A7D;
+  font-weight: bold;
+  padding: 5px 0;
+}
+.information .information__body ul li .info-date {
+  color: #000;
+  font-size: 0.5em;
+  font-weight: bold;
+}
+.login .login-btn {
+  display: block;
+  background-color: #F31A7D;
+  width: 120px;
+  margin: 30px auto 15px;
+  -webkit-box-shadow: 0 0 0 2px #FFF,
+  0 0 0 4px #9E9E9E;
+  box-shadow: 0 0 0 2px #FFF,
+  0 0 0 4px #9E9E9E;
+  line-height: 22px;
+  border-radius: 8px;
+  color: #FFF;
+  font-size: 0.7em;
+  text-align: center;
+  text-decoration: none;
+  font-weight: bold;
+}
+.login .login-btn a {
+  text-decoration: none;
+  color: #FFF;
+  font-weight: bold;
+}
+.login .login-btn a.btn.login::before{
+  mask-image: url('/img/web/ic/ic-login.svg');
+  -webkit-mask-image: url('/img/web/ic/ic-login.svg');
+  display: inline-block;
+  content: '';
+  background-color: #fff;
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-position: center;
+  height: 20px;
+  width: 20px;
+  margin: 0 5px -6px 0;
+  transform:scale(0.8);
+}
+.login .login-btn img {
+  height: 12px;
+  width: 14px;
+  vertical-align: middle;
+}
+
 .user-info {
   position: relative;
   width: 90%;
@@ -501,3 +660,136 @@ body {
   opacity: 0;
 }
 
+/* ---------------------------------------------------
+ footer
+------------------------------------------------------ */
+#footer {
+  text-align:center;
+  padding:30px 0 50px 0;
+  max-width: 394px;
+  margin: 0 auto;
+}
+
+#footer a.btn {
+  display: block;
+  background-color: #000;
+  width: 120px;
+  margin: 0 auto 16px;
+  -webkit-box-shadow: 0 0 0 2px #FFF, 0 0 0 4px #9E9E9E;
+  box-shadow: 0 0 0 2px #FFF, 0 0 0 4px #9E9E9E;
+  line-height: 22px;
+  border-radius: 8px;
+  color: #FFF;
+  font-size: 0.7em;
+  text-align: center;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+#footer a.btn:before {
+  display: inline-block;
+  content:'';
+  background-color: #fff;
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-position: center;
+  height: 20px;
+  width: 20px;
+  margin: 0 5px -6px 0;
+  transform: scale(0.8);
+}
+
+#footer a.btn[class*="top"]:before {/*トップへ*/
+  mask-image: url('/img/web/ic/ic-top.svg');
+  -webkit-mask-image: url('/img/web/ic/ic-top.svg');
+}
+#footer a.btn[class*="option"]:before {/*各種設定*/
+  mask-image: url('/img/web/ic/ic-option.svg');
+  -webkit-mask-image: url('/img/web/ic/ic-option.svg');
+}
+#footer a[class*="login"]:before {/*ログイン*/
+  mask-image: url('/img/web/ic/ic-login.svg');
+  -webkit-mask-image: url('/img/web/ic/ic-login.svg');
+}
+#footer a[class*="logout"]:before {/*ログアウト*/
+  mask-image: url('/img/web/ic/ic-logout.svg');
+  -webkit-mask-image: url('/img/web/ic/ic-logout.svg');
+}
+#footer a.btn[class*="music"]:before {/*楽曲解放*/
+  mask-image: url('/img/web/ic/ic-music.svg');
+  -webkit-mask-image: url('/img/web/ic/ic-music.svg');
+}
+#footer a[class*="vip"]:before {/*VIP利用規約へ*/
+  mask-image: none;
+  -webkit-mask-image: none;
+  background-color: transparent;
+  background-image: url('/img/web/ic/ic-vip.svg');
+  background-repeat: no-repeat;
+  height: 21px;
+  width: 30px;
+  margin: 0 5px -7px 0;
+}
+#footer hr {
+  margin: 10px;
+}
+/*権利表記*/
+#footer #copyright {
+  font-size: 12px;
+}
+#footer #copyright > p {
+  margin: 6px 0;
+}
+#footer #copyright > p > img.copyright_logo {
+  position: relative;
+  height: 14px;
+  top: 3px;
+  left: 3px;
+}
+#footer #logo_copyright {
+  font-size: 12px;
+}
+
+/*テキストメニュー*/
+#footer #text_menu {
+  font-size: 12px;
+  margin: 24px 0;
+}
+#footer #text_menu ul {
+  list-style: none;
+  display: flex;
+  justify-content: center;
+}
+#footer #text_menu ul > li {
+  border-right: 1px solid #000;
+  padding: 0 10px;
+}
+#footer #text_menu ul > li:last-child {
+  border-right: none;
+}
+#footer #text_menu ul > li a {
+  color: #000;
+}
+
+/*ロゴ*/
+#footer div.logo {
+  display: flex;
+  margin: 20px auto;
+  align-items: center;
+  justify-content: center;
+}
+#footer div.logo > div.marvelous_logo {
+  width: 30%;
+  margin-right: 10%;
+}
+#footer div.logo > div.marvelous_logo > a > img {
+  display: block;
+  width: 100%;
+}
+#footer div.logo > div.tanoc_logo {
+  width: 40%;
+}
+#footer div.logo > div.tanoc_logo > a > img {
+  display: block;
+  width: 100%;
+}

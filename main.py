@@ -102,7 +102,7 @@ class StageUpSong(Song):
         self.score = score
 
 class StageUp:
-    def __init__(self, id, leaderboard)
+    def __init__(self, id, leaderboard):
         self.id = id
         self.leaderboard = leaderboard
     songs = []

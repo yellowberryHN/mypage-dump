@@ -1,2 +1,0 @@
-"MyPage Dumper" is a tool that scrapes and archives (dumps) all of your player data accessible from the WACCA MyPage website.
-
