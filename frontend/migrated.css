@@ -1,10 +1,106 @@
-* {
+:root {
+    /* main colors */
+    --pink: #e50065;
+    --blue: #49a0e8;
+    --yellow: #f7d000;
+    --gray: #808080;
+
+    /* mode colors */
+    --normal: #009fe9;
+    --hard: #ffc300;
+    --expert: #ff0084;
+    --inferno: #4a004f;
+
+    /* main colors */
+    --link-blue: #0066c0;
+}
+
+
+html, body, button, div, span, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+abbr, address, cite, code,
+del, dfn, em, img, ins, kbd, q, samp,
+small, strong, sub, sup, var,
+b, i,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, figcaption, figure,
+footer, header, hgroup, menu, nav, section, summary,
+time, mark, audio, video {
   padding: 0;
   border: 0;
   outline: 0;
   font-size: 100%;
   vertical-align: baseline;
   background: transparent;
+}
+body {
+  line-height: 1;
+}
+article, aside, details, figcaption, figure,
+footer, header, hgroup, menu, nav, section {
+  display: block;
+}
+nav ul {
+  list-style: none;
+}
+blockquote, q {
+  quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+  content: '';
+  content: none;
+}
+a {
+  margin: 0;
+  padding: 0;
+  font-size: 100%;
+  vertical-align: baseline;
+  background: transparent;
+  text-decoration: none;
+  cursor: pointer;
+  color: #FFF;
+}
+/* change colours to suit your needs */
+ins {
+  background-color: #ff9;
+  color: #000;
+  text-decoration: none;
+}
+/* change colours to suit your needs */
+mark {
+  background-color: #ff9;
+  color: #000;
+  font-style: italic;
+  font-weight: bold;
+}
+del {
+  text-decoration: line-through;
+}
+abbr[title], dfn[title] {
+  border-bottom: 1px dotted;
+  cursor: help;
+}
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+/* change border colour to suit your needs */
+hr {
+  display: block;
+  height: 1px;
+  border: 0;
+  border-top: 1px solid #cccccc;
+  margin: 1em 0;
+  padding: 0;
+}
+input, select {
+  vertical-align: middle;
+}
+li {
+  list-style: none;
 }
 
 section {
@@ -19,7 +115,7 @@ a {
   background: transparent;
   text-decoration: none;
   cursor: pointer;
-  color: #FFF;
+  color: var(--link-blue);
 }
 
 .login-select p {
@@ -232,10 +328,6 @@ a {
   font-size: 0.8em;
   margin: 15px auto;
 }
-.login .information {
-  width: 90%;
-  margin: 0 auto;
-}
 .login .information .information__tab {
   display: -webkit-box;
   display: -ms-flexbox;
@@ -250,43 +342,6 @@ a {
 .login .information .information__tab li {
   cursor: pointer;
 }
-.login .information .information__tab li.btn__update {
-  display: block;
-  color: #000;
-  background-color: #f7d000;
-  width: 98px;
-  -webkit-box-shadow: 0 0 0 2px #FFF, 4px -2px 0px 1px #9E9E9E, -2px -2px 0px 1px #9E9E9E;
-  box-shadow: 0 0 0 2px #FFF, 4px -2px 0px 1px #9E9E9E, -2px -2px 0px 1px #9E9E9E;
-  line-height: 22px;
-  border-radius: 8px 8px 0 0;
-  font-size: 0.7em;
-  text-align: center;
-  text-decoration: none;
-  font-weight: bold;
-}
-.login .information .information__tab li.btn__news {
-  display: block;
-  color: #FFF;
-  background-color: #1AA9EC;
-  background: -moz-linear-gradient(top, #3FBCF9, #069DE5);
-  background: -webkit-linear-gradient(top, #3FBCF9, #069DE5);
-  background: linear-gradient(to bottom, #3FBCF9, #069DE5);
-  width: 98px;
-  -webkit-box-shadow: 0 0 0 2px #FFF, 4px -2px 0px 1px #9E9E9E, -2px -2px 0px 1px #9E9E9E;
-  box-shadow: 0 0 0 2px #FFF, 4px -2px 0px 1px #9E9E9E, -2px -2px 0px 1px #9E9E9E;
-  line-height: 22px;
-  border-radius: 8px 8px 0 0;
-  font-size: 0.7em;
-  text-align: center;
-  text-decoration: none;
-  font-weight: bold;
-}
-.login .information .information__tab li.is-active {
-  z-index: 10;
-}
-.login .information .information__tab li:first-child {
-  margin-right: 6px;
-}
 .login .information .information__body {
   width: 98%;
   margin: 0 auto;
@@ -300,7 +355,7 @@ a {
   font-size: 0.8em;
 }
 .login .information .information__body.info-update {
-  background-color: #f7d000;
+  background-color: var(--yellow);
 }
 .login .information .information__body.info-news {
   background-color: #1AA9EC;
@@ -313,31 +368,47 @@ a {
   margin: 0 auto;
   padding-top: 0px;
 }
+.information .information__body {
+  width: 98%;
+  margin: 0 auto;
+  -webkit-box-shadow: 0 0 0 2px #FFF,
+  0 0 0 4px #9E9E9E;
+  box-shadow: 0 0 0 2px #FFF,
+  0 0 0 4px #9E9E9E;
+  height: auto;
+  border-radius: 8px;
+  display: none;
+  font-size: 0.8em;
+}
+.information .information__body.info-update {
+  background-color: var(--yellow);
+}
+.information .information__body.info-news {
+  background-color: #1AA9EC;
+}
+.information .information__body.is-show {
+  display: block;
+}
+.information .information__body ul {
+  width: 95%;
+  margin: 0 auto;
+  padding-top: 0px;
+}
 .information .information__body ul li {
   background-color: #FFF;
   min-height: 38px;
-  margin-bottom: 2px;
+  font-size: 1.3em;
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
   -webkit-box-align: center;
   -ms-flex-align: center;
   align-items: center;
-  padding: 1%;
+  padding: 8px;
   overflow: hidden;
 }
-.information .information__body ul li div {
-  padding-left: 5px;
-}
-.information .information__body ul li .info-title {
-  color: #F31A7D;
-  font-weight: bold;
-  padding: 5px 0;
-}
-.information .information__body ul li .info-date {
-  color: #000;
-  font-size: 0.5em;
-  font-weight: bold;
+.information .information__body ul li .term{
+  font-size: 0.7em;
 }
 .login .login-btn {
   display: block;
@@ -599,13 +670,13 @@ li {
 }
 
 body {
-  font-family: '繝偵Λ繧ｮ繝手ｧ偵ざ繧ｷ繝�け','Hiragino Sans',YuGothic,'Yu Gothic','繝｡繧､繝ｪ繧ｪ', Meiryo,'�ｭ�ｳ �ｰ繧ｴ繧ｷ繝�け','MS PGothic',sans-serif;
+  font-family: 'ヒラギノ角ゴシック','Hiragino Sans',YuGothic,'Yu Gothic','メイリオ', Meiryo,'ＭＳ Ｐゴシック','MS PGothic',sans-serif;
   line-height: 1;
   background-image: url("/static/assets/pattern.png");
 }
 
 .container {
-  width: 375px;
+  max-width: 375px;
   margin: 0 auto;
 }
 
@@ -778,18 +849,48 @@ body {
   align-items: center;
   justify-content: center;
 }
-#footer div.logo > div.marvelous_logo {
-  width: 30%;
-  margin-right: 10%;
+
+p { 
+  text-align: center;
 }
-#footer div.logo > div.marvelous_logo > a > img {
-  display: block;
-  width: 100%;
+
+li p {
+  text-align: inherit;
 }
-#footer div.logo > div.tanoc_logo {
-  width: 40%;
+
+div a.btn, div button.btn{
+  display: inline-block;
+  background-color: #000;
+  /*min-width: 95px !important;*/
+  margin: 0 auto;
+  -webkit-box-shadow: 0 0 0 2px #FFF,
+  0 0 0 4px #9E9E9E;
+  box-shadow: 0 0 0 2px #FFF,
+  0 0 0 4px #9E9E9E;
+  line-height: 26px;
+  border-radius: 8px;
+  color: #FFF;
+  font-size: 0.9em;
+  text-align: center;
+  text-decoration: none;
+  font-weight: bold;
+  padding: 0 6px;
 }
-#footer div.logo > div.tanoc_logo > a > img {
-  display: block;
-  width: 100%;
+
+div a.btn_pink, div button.btn_pink {
+  background-color: var(--pink);
+}
+
+div a.btn_inferno, div button.btn_inferno {
+  background-color: var(--inferno);
+}
+
+p > input {
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+    width: 70%;
+    padding: 4px;
+    margin: 8px;
+    margin-left: 0;
 }

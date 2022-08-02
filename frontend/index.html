@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
     <meta charset="utf-8">
@@ -7,7 +7,7 @@
     <title>MyPage Dumper</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="format-detection" content="telephone=no">
-    <meta http-equiv="Content-Language" content="ja">
+    <meta http-equiv="Content-Language" content="en">
     <link rel="stylesheet" href="/static/migrated.css">
     <link href="https://fonts.googleapis.com/css?family=Noto+Sans+JP:500,700,900&display=swap&subset=japanese" rel="stylesheet">
     <style type="text/css">
@@ -18,6 +18,19 @@
     		list-style: inherit;
     	}
     </style>
+    <script type="text/javascript">
+    	function copyBookmarklet() {
+		    const book = document.querySelector('#bookmarklet').value
+		    const text = "Copied!";
+
+		    if (navigator.clipboard == undefined) {
+		        window.clipboardData.setData('Text', book);
+		        alert(text);
+		    } else {
+		        navigator.clipboard.writeText(book).then(function() {alert(text)})
+		    }
+		}
+    </script>
 </head>
 
 <body>
@@ -28,22 +41,26 @@
                 <p>&quot;MyPage Dumper&quot; is a tool that scrapes and archives (dumps) all of your player data accessible from the WACCA MyPage website.</p>
 				<h2>How to use</h2>
 				<ol>
-				<li><p>Bookmark this page</p>
+				<li><p>Bookmark this page.</p>
 				</li>
-				<li><p>Copy this bookmarklet:</p>
-				<p><code>something goes here</code></p>
+				<li><p style="margin-bottom: 0;">Copy this bookmarklet:</p>
+				<p style="margin-top: 0"><input id="bookmarklet" type="text" value="javascript:(function(){import('https://w.yello.ooo/book.js').then((obj)=>obj.main())})();" readonly><button type="button" class="btn btn_pink" onclick="copyBookmarklet();">Copy</button></p>
 				</li>
-				<li><p>Edit the bookmark and change the address to the string copied in step 2</p>
+				<li><p>Edit the bookmark and change the address to the string copied in step 2.</p>
 				</li>
-				<li><p><a href="https://wacca.marv-games.jp/web/login/index">Login to WACCA MyPage</a></p>
+				<li><p><div><a class="btn btn_inferno" href="https://wacca.marv-games.jp/web/login/index" target="_blank">Login to WACCA MyPage</a></div></p>
 				</li>
 				<li><p>If you are already logged in, log out, and log back in, but <strong>do not select an account yet!</strong></p>
 				</li>
-				<li><p>When you get to the account selection page, run the bookmarklet</p>
-				<ul>
-				<li>PC, iOS: Open your bookmarks, find the bookmark you created and press it.</li>
-				<li>Android: Type the name of the bookmark into your address bar, and press it from the list of suggestions</li>
-				</ul>
+				<li><p>When you get to the account selection page, run the bookmarklet:</p>
+				<div class="information">
+					<div class="information__body info-update is-show panel">
+						<ul>
+						<li>PC, iOS: Open your bookmarks, find the bookmark you created and press it.</li>
+						<li>Android: Type the name of the bookmark into your address bar, and press it from the list of suggestions</li>
+						</ul>
+					</div>
+				</div>
 				</li>
 				<li><p>You should see the names of your accounts turn red if it was successful.</p>
 				</li>
@@ -54,7 +71,7 @@
 				<li><p>Once it has finished, you will see your name, level, and icon. Click on the &quot;Download&quot; button to download the prepared file.</p>
 				</li>
 				</ol>
-				<p>This file contains all of your scores, recent plays, leaderboard positions, unlocks and more. Other developers can create tools to read this data format, for example, allowing you to import your data into a score keeping application. <strong>More info for developers can be found <a href="https://github.com/YellowberryHN/mypage-dump/wiki">here</a>.</strong></p>
+				<p>This file contains all of your scores, recent plays, leaderboard positions, unlocks and more. Other developers can create tools to read this data format, for example, allowing you to import your data into a score keeping application. <strong>More info for developers can be found <a href="https://github.com/YellowberryHN/mypage-dump/wiki" target="_blank">here</a>.</strong></p>
             </section>
             <footer id="top">
                 <div id="footer">
