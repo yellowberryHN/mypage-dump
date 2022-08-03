@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>マイページダンパー</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="format-detection" content="telephone=no">
+    <meta http-equiv="Content-Language" content="ja">
+    <link rel="stylesheet" href="/static/migrated.css">
+    <style type="text/css">
+    	ol { 
+    		margin-left: 2em;
+    	}
+    	ol li {
+    		list-style: inherit;
+    	}
+    </style>
+    <script type="text/javascript">
+    	function copyBookmarklet() {
+		    const book = document.querySelector('#bookmarklet').value
+		    const text = "コピーしました！";
+
+		    if (navigator.clipboard == undefined) {
+		        window.clipboardData.setData('Text', book);
+		        alert(text);
+		    } else {
+		        navigator.clipboard.writeText(book).then(function() {alert(text)})
+		    }
+		}
+    </script>
+</head>
+
+<body>
+    <div class='container'>
+        <div id='pushobj'>
+            <section class="login">
+                <h2>マイページダンパー</h2>
+                <p>「マイページダンパー」は、WACCAマイページからアクセスできるプレーヤーデータをスクレイプしてアーカイブ（ダンプ）するツールです。</p>
+                <p><a href="/">View in English</a></p>
+				<h2>使い方</h2>
+				<ol>
+				<li><p>このページをブックマークします。</p>
+				</li>
+				<li><p style="margin-bottom: 0;">ブックマークレットをコピーします。</p>
+				<p style="margin-top: 0"><input id="bookmarklet" type="text" value="まだ準備ができていません" readonly><button type="button" class="btn btn_pink" onclick="copyBookmarklet();">コピー</button></p>
+				</li>
+				<li><p>ステップ1で作成したブックマークのアドレスを、ステップ2でコピーした文字列に書き換えて保存します。</p>
+				</li>
+				<li><p><div><a class="btn btn_inferno" href="https://wacca.marv-games.jp/web/login/index" target="_blank">WACCAのマイページへログインします</a></div></p>
+				</li>
+				<li><p>すでにログインしている場合は、一度ログアウトして、再度ログインして。でも、<strong>まだアカウントを選択しないでください。</strong></p>
+				</li>
+				<li><p>アカウント選択画面が表示されたら、ブックマークレットを実行する。</p>
+				<div class="information">
+					<div class="information__body info-update is-show panel">
+						<ul>
+						<li>PCとiOS：ブックマークの一覧からブックマークレットを押してください。</li>
+						<li>Android：アドレスバーにブックマークレットの名前を入力し、表示された候補の中からブックマークレットを押してください。</li>
+						</ul>
+					</div>
+				</div>
+				</li>
+				<li><p>成功した場合は、アカウント名が赤色に変わります。</p>
+				</li>
+				<li><p>これで通常通りログインを続け、プレイヤー情報をダンプするかどうか尋ねられたら「YES」を選択します。</p>
+				</li>
+				<li><p>再びこのサイトに移動し、進捗状況を示すインジケーターが表示され、完了までの道のりを知らせてくれます。</p>
+				</li>
+				<li><p>終了すると、あなたの名前とレベルとアイコンが表示されます。「ダウンロード」ボタンをクリックすると、用意されたファイルがダウンロードされます。</p>
+				</li>
+				</ol>
+				<p>このファイルには、あなたのスコア、最近のプレイ、リーダーボードの順位、アンロックなどがすべて含まれています。他の開発者は、このデータ形式を読み取るツールを作成し、例えば、スコア管理アプリケーションにデータを取り込むことができるようにすることができます。<strong>開発者向けの詳しい情報は<a href="https://github.com/YellowberryHN/mypage-dump/wiki" target="_blank">こちら</a>をご覧ください。</strong></p>
+            </section>
+            <footer id="top">
+                <div id="footer">
+                    <hr />
+                    <div id="logo_copyright">
+                        <p>Created with &#x1F49B; by <a href="https://yello.ooo">Yellowberry</a> and <a href="https://twitter.com/JustACoalRock">Coal</a></p>
+                    </div>
+            </footer>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -10,7 +10,7 @@ export function main() {
    document.head.append(style);
 
    for (const actionKey of actionList) {
-      actionKey.action = "https://w.yello.ooo/api/scrape";
+      actionKey.action = "https://w.yello.ooo/api/scrape/en";
       actionKey.querySelector("\x23\x61\x69\x6d\x65\x49\x64").name = "userId";
    }
 

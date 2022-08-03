@@ -1,1 +1,0 @@
-javascript:(function(){import('https://w.yello.ooo/book.js?lang=jp').then((obj)=>obj.main())})();

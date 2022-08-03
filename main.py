@@ -30,7 +30,7 @@ magic = codecs.decode("nvzrVq","rot-13") # hi sega
 full_dump = False # dump play count
 check_valid = True # validate json output against schema
 
-extra_langs = ["jp"]
+extra_langs = ["ja"]
 
 difficulty_dict = {
     "NORMAL": 0,
@@ -647,14 +647,14 @@ def scrape_background(user_id):
     users[user_id] = User(user_id)
     users[user_id].scrape()
 
-@app.post("/api/scrape")
-async def scrape(userId: str = Form(), background_tasks: BackgroundTasks = BackgroundTasks()):
+@app.post("/api/scrape/{lang}")
+async def scrape(lang: str="en", userId: str = Form(), background_tasks: BackgroundTasks = BackgroundTasks()):
     if not userId.isdigit(): 
         return Response(json={"error":"invalid id"}, status_code=400)
     if int(userId) not in users:
         background_tasks.add_task(scrape_background, int(userId))
 
-    return RedirectResponse(url="/progress?id=" + userId, status_code=303)
+    return RedirectResponse(url=f"/progress?id={userId}&lang={lang}", status_code=303)
 
 @app.get("/api/getProgress")
 async def get_progress(id: str):
@@ -693,23 +693,23 @@ async def get_bookmarklet(lang: str="en"):
     filename = "book/main.js"
     if lang in extra_langs:
         filename = f"book/main-{lang}.js"
-    with open(filename) as file:
+    with open(filename, encoding="utf-8") as file:
         return Response(content=jsmin(file.read()), media_type="text/javascript", headers={"Access-Control-Allow-Origin": "*"})
 
 @app.get("/progress")
-async def progress(id: str, lang: str = "en"):
+async def progress(id: str, lang: str="en"):
     filename = "frontend/progress.html"
     if lang in extra_langs:
         filename = f"frontend/progress-{lang}.html"
-    with open(filename) as file:
+    with open(filename, encoding="utf-8") as file:
         return HTMLResponse(file.read(), status_code=200)
 
 @app.get("/")
 async def read_index():
-    with open("frontend/index.html") as file:
+    with open("frontend/index.html", encoding="utf-8") as file:
         return HTMLResponse(file.read(), status_code=200)
 
-@app.get("/jp/")
-async def read_index_jp():
-    with open("frontend/index-jp.html") as file:
+@app.get("/ja")
+async def read_index_ja():
+    with open("frontend/index-ja.html", encoding="utf-8") as file:
         return HTMLResponse(file.read(), status_code=200)
