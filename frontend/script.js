@@ -41,7 +41,7 @@ function updateProgress(userId) {
         songs.setText('Completed!')
         document.getElementById("progress-container").classList.add("hidden")
         loadUserData(userId)
-        setTimeout(function(){document.getElementById("ui").classList.add("visible")}, 1000)
+        setTimeout(function(){document.getElementById("ui").classList.add("visible")}, 10000)
         
         clearInterval(updateInterval)
       }
@@ -67,7 +67,7 @@ function loadUserData(userId) {
       document.getElementById("points").textContent = userDataJson["points"]
     }
     else {
-      setTimeout(loadUserData, 1000, userId)
+      setTimeout(loadUserData, 10000, userId)
     }
   }
 
@@ -94,4 +94,4 @@ function downloadDump() {
 
 let songs = newBar("progress1");
 let userId = new URLSearchParams(location.search).get("id");
-let updateInterval = setInterval(updateProgress, 1000, userId);
+let updateInterval = setInterval(updateProgress, 10000, userId);
