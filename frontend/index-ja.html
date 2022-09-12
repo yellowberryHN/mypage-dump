@@ -39,7 +39,7 @@
     </script>
 </head>
 
-<body>
+<body onload="getBookmarklet();">
     <div class='container'>
         <div id='pushobj'>
             <section class="login">
@@ -51,7 +51,7 @@
 				<li><p>このページをブックマークします。</p>
 				</li>
 				<li><p style="margin-bottom: 0;">ブックマークレットをコピーします。</p>
-				<p style="margin-top: 0"><input id="bookmarklet" type="text" value="まだ準備ができていません" readonly><button type="button" class="btn btn_pink" onload="getBookmarklet();" onclick="copyBookmarklet();">コピー</button></p>
+				<p style="margin-top: 0"><input id="bookmarklet" type="text" value="まだ準備ができていません" readonly><button type="button" class="btn btn_pink" onclick="copyBookmarklet();">コピー</button></p>
 				</li>
 				<li><p>ステップ1で作成したブックマークのアドレスを、ステップ2でコピーした文字列に書き換えて保存します。</p>
 				</li>
