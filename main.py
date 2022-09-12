@@ -18,12 +18,14 @@ import pytz
 Left to implement:
 - stage up
 - titles
-- trophies
 
 """
 
 endpoint = os.environ.get("MYPAGE_ENDPOINT")
 endpoint = endpoint if endpoint is not None else ""
+
+if endpoint == "":
+    raise Exception("MYPAGE_ENDPOINT env variable must be set!")
 
 jst = pytz.timezone("Asia/Tokyo") # used for time conversion
 magic = codecs.decode("nvzrVq","rot-13") # hi sega
@@ -85,7 +87,7 @@ class PersonalBest(Song):
         self.play_count = 0
 
 class RecentPlay(Song):
-    def __init__(self, id, score, name, timestamp, difficulty, judgements, timings, max_combo):
+    def __init__(self, id, score, name, timestamp, difficulty, judgements, timings, max_combo, new_record):
         self.id = id 
         self.__name = name
         self.score = score
@@ -94,6 +96,7 @@ class RecentPlay(Song):
         self.judgements = judgements
         self.timings = timings
         self.max_combo = max_combo
+        self.new_record = new_record
 
 class StageUpSong(Song):
     def __init__(self, id, name, score):
@@ -109,7 +112,6 @@ class StageUp:
 
 class Friend:
     def __init__(self, name, friend_code, level, rate, icon, color):
-        self.id = id
         self.name = name
         self.friend_code = friend_code
         self.level = level
@@ -142,6 +144,11 @@ class Settings:
         self.display = display
         self.design = design
         self.sound = sound
+
+class Trophy:
+    def __init__(self, id, unlocked):
+        self.id = id
+        self.unlocked = unlocked
 
 class GameSettings:
     noteSpeed = None
@@ -220,6 +227,7 @@ class User:
         else:
             print("User got logged out...")
             self.login_request()
+            self.gen_cookie()
 
     def get_user_info(self):
         print("Getting player info...")
@@ -247,7 +255,7 @@ class User:
 
         self.__songs_total = int(soup.select_one('span.score-point__difficulty.difficulty__normal').text)
 
-        print("Getting mission stage...")
+        print("Getting mission stage (bingo)...")
         self.__response = requests.request("GET", f"{endpoint}/mission", headers=self.gen_cookie())
         soup = BeautifulSoup(self.__response.text, 'lxml')
         self.mission_stage = int(soup.select_one(".current-sheet-num > span").text)
@@ -392,7 +400,11 @@ class User:
                 
             max_combo = int(song.select_one(".detail-table__score.combo .combo__num").text)
 
-            recent = RecentPlay(song_id, name, timestamp, diff, judgements, timings, max_combo)
+            score = get_int(song.select_one(".playdata__history-list__song-info__score").text)
+
+            new_record = song.select_one(".playdata__history-list__new-btn") is not None
+
+            recent = RecentPlay(song_id, score, name, timestamp, diff, judgements, timings, max_combo, new_record)
         
             self.recents.append(recent)
 
@@ -426,9 +438,9 @@ class User:
         self.navigator = get_int(soup.select_one(".current-navi-character__icon").img["src"])
 
         self.navigators = []
-        navi_elements = soup.select(".collection__navi-character-list #naviCharacterId")
+        navi_elements = soup.select(".collection__navi-character-list > li > div > img")
         for navi in navi_elements:
-            self.navigators.append(int(navi["value"]))
+            self.navigators.append(get_int(navi["src"]))
 
     def get_boxes(self):
         print("Getting box stats...")
@@ -441,6 +453,22 @@ class User:
 
         for box in boxes:
             self.boxes.append(self.scrape_box(int(box["value"])))
+
+    def get_trophies(self):
+        print("Getting trophies...")
+
+        self.trophies = []
+
+        for season_id in [1,2,3]:
+            self.__response = requests.request("POST", f"{endpoint}/trophy/index/get", data=f"seasonId={season_id}",headers=self.gen_cookie() | self.__headers_form_encoded)
+
+            shit = jsons.loads(self.__response.text)
+
+            season = []
+            for trophy in shit["trophyMasterList"]:
+                season.append(Trophy(trophy["trophyId"], trophy["isHavingTrophy"]))
+
+            self.trophies.append(season)
 
     def scrape_box(self,box):
         #print(f"* Scraping box {box}...")
@@ -572,13 +600,13 @@ class User:
 
             if setting == "myColor":
                 unlocked_colors = []
-                for color in soup.select("div.mycolor-list__set-btn > form > input"):
-                    unlocked_colors.append(int(color["value"]))
+                for color in soup.select("div.mycolor-list__icon > img"):
+                    unlocked_colors.append(get_int(color["src"]))
                 setting_value = {"current": get_int(soup.select_one(".current-mycolor__icon > img")["src"]), "unlocked": unlocked_colors}
             elif setting == "touchEffectPop":
                 unlocked_effects = []
-                for effect in soup.select("div.toucheffect-list__set-btn > form > input"):
-                    unlocked_effects.append(int(effect["value"]))
+                for effect in soup.select("div.toucheffect-list__icon > img"):
+                    unlocked_effects.append(get_int(effect["src"]))
                 setting_value = {"current": get_int(soup.select_one(".current-toucheffect__icon > img")["src"]), "unlocked": unlocked_effects}
             elif setting in ["slideColorInvert","touchEffectShoot","keyBeam","rNoteEffect"]:
                 setting_value = int(soup.select_one("div.option_image_select_content.selected > input")["value"]) == 1
@@ -597,8 +625,8 @@ class User:
 
             if setting == "noteTouchSe":
                 unlocked_sounds = []
-                for sound in soup.select("div.se-list__bottom > form > input"):
-                    unlocked_sounds.append(int(sound["value"]))
+                for sound in soup.select("div.se-list__play-btn > a > audio > source"):
+                    unlocked_sounds.append(get_int(sound["src"]))
                 setting_value = {"current": get_int(soup.select_one(".current-se__stop-btn > a > audio > source")["src"]), "unlocked": unlocked_sounds}
             elif setting == "charaSound":
                 setting_value = int(soup.select_one('option[selected]')["value"]) == 1
@@ -609,19 +637,21 @@ class User:
 
     def scrape(self):
         self.get_user_info()
-        #self.get_song_data()
+        self.get_trophies()
+        self.get_song_data()
         self.get_recent_plays()
-        #self.get_icons()
-        #self.get_plates()
-        #self.get_navigators()
-        #self.get_boxes()
-        #self.get_gates()
-        #self.get_unlocks()
-        #self.get_friends()
-        #self.get_settings()
+        self.get_icons()
+        self.get_plates()
+        self.get_navigators()
+        self.get_boxes()
+        #self.get_gates() # gates have been disabled and no longer appear.
+        #self.get_unlocks() # special unlocks have been disabled and no longer appear.
+        self.get_friends()
+        self.get_settings()
         print(time.perf_counter() - self.__start_time)
         user_json = jsons.dumps({"player": self}, key_transformer=jsons.KEY_TRANSFORMER_CAMELCASE, strip_privates=True)
         if check_valid:
+            print("Validating against WACCA Data schema...")
             validate(instance=jsons.loads(user_json), schema=json.loads(open("schema/wacca_data.schema.json", "r").read()))
         f = open(f"dumps/{self.id}.json", "w")
         f.write(user_json)

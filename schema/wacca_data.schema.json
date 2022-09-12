@@ -46,7 +46,8 @@
               "minimum": 1,
               "maximum": 3
             }
-          }
+          },
+          "required": ["stage", "type"]
         },
         "rate": {
           "type": "integer"
@@ -360,8 +361,24 @@
           "items": {
             "type": "object",
             "properties": {
-              "INCOMPLETE"
-            }
+              "id": {
+                "type": "integer"
+              },
+              "difficulty": {
+                "type": "integer"
+              },
+              "score": {
+                "type": "integer",
+                "maximum": 1000000
+              },
+              "rating": {
+                "type": "integer"
+              },
+              "achieve": {
+                "type": "integer"
+              }
+            },
+            "required": ["id", "score", "difficulty"]
           },
           "minItems": 1,
           "maxItems": 50
