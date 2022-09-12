@@ -416,6 +416,45 @@
           "minItems": 1,
           "maxItems": 100
         },
+        "stages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "songs": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "score": {
+                      "type": "integer",
+                      "maximum": 1000000
+                    }
+                  }
+                }
+              },
+              "details": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "integer"
+                  },
+                  "leaderboard": {
+                    "type": "integer"
+                  }
+                }
+              }
+            },
+            "required": ["id", "details"]
+          },
+          "minItems": 1
+        },
         "titles": {
           "type": "object",
           "properties": {

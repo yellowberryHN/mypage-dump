@@ -1,7 +1,7 @@
 import os, requests, re, time, codecs, json, jsons
 from fastapi import FastAPI, Form, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import RedirectResponse, Response, HTMLResponse, FileResponse
+from fastapi.responses import RedirectResponse, Response, HTMLResponse, FileResponse, JSONResponse
 from jsmin import jsmin
 from bs4 import BeautifulSoup
 from user_agent import generate_user_agent
@@ -16,7 +16,6 @@ import pytz
 """
 
 Left to implement:
-- stage up
 - titles
 
 """
@@ -26,6 +25,8 @@ endpoint = endpoint if endpoint is not None else ""
 
 if endpoint == "":
     raise Exception("MYPAGE_ENDPOINT env variable must be set!")
+
+os.makedirs("dumps", exist_ok=True) # create dumps directory if it doesn't exist
 
 jst = pytz.timezone("Asia/Tokyo") # used for time conversion
 magic = codecs.decode("nvzrVq","rot-13") # hi sega
@@ -69,10 +70,15 @@ class BasicDifficultyStats:
         self.rating = rating
         self.achieve = achieve
 
+
+
 class Progress:
-    def __init__(self, songs_total, songs_completed) -> None:
-        self.songs_total =  songs_total
-        self.songs_completed = songs_completed
+    step = "userinfo"
+
+    count = {
+     "completed": 0,
+     "total": 0,
+    }
 
 class Song:
     def __init__(self, id, name):
@@ -98,17 +104,17 @@ class RecentPlay(Song):
         self.max_combo = max_combo
         self.new_record = new_record
 
-class StageUpSong(Song):
+class StageSong(Song):
     def __init__(self, id, name, score):
         self.id = id
         self.__name = name
         self.score = score
 
-class StageUp:
-    def __init__(self, id, leaderboard):
+class Stage:
+    def __init__(self, id, songs, details):
         self.id = id
-        self.leaderboard = leaderboard
-    songs = []
+        self.songs = songs
+        self.details = details
 
 class Friend:
     def __init__(self, name, friend_code, level, rate, icon, color):
@@ -212,7 +218,17 @@ class User:
 
     name = ""
     songs = []
-    recents = []
+
+    def set_progress(self, step, completed = 0, total = 0):
+        if not self.__progress:
+            self.__progress = Progress()
+
+        self.__progress.step = step
+        self.__progress.count = {
+            "completed": completed,
+            "total": total
+        }
+
 
     def login_request(self):
         print("Logging in with user ID {0}...".format(self.id))
@@ -231,6 +247,7 @@ class User:
 
     def get_user_info(self):
         print("Getting player info...")
+        self.set_progress("userinfo")
         self.__response = requests.request("GET", f"{endpoint}/player", headers=self.gen_cookie())
         soup = BeautifulSoup(self.__response.text, 'lxml')
 
@@ -260,6 +277,8 @@ class User:
         soup = BeautifulSoup(self.__response.text, 'lxml')
         self.mission_stage = int(soup.select_one(".current-sheet-num > span").text)
 
+        print(self.__progress.__dict__)
+
     def get_song_data(self):
         print("Getting song list...")
         self.__response = requests.request("GET", f"{endpoint}/music", headers=self.gen_cookie())
@@ -281,12 +300,15 @@ class User:
         if full_dump:
             print("Getting song data for {0} songs...".format(self.__songs_total))
             for song in songlist:
+                self.set_progress("songs", len(self.songs), self.__songs_total)
                 yeah = PersonalBest(int(song.div.form.input["value"]), song.div.a.div.div.text)
                 self.songs.append(self.scrape_song_data(yeah))
+            self.set_progress("songs", len(self.songs), self.__songs_total)
         else:
             print("Getting song data for {0} songs [LITE]...".format(self.__songs_total))
 
             for song in songlist:
+                self.set_progress("songs", len(self.songs), self.__songs_total)
                 yeah = PersonalBest(int(song.div.form.input["value"]), song.div.a.div.div.text)
 
                 diffs = ["normal", "hard", "expert", "inferno"]
@@ -315,6 +337,7 @@ class User:
                     yeah.difficulties.append(BasicDifficultyStats(score, rate, achieve))
 
                 self.songs.append(yeah)
+            self.set_progress("songs", len(self.songs), self.__songs_total)
             print(self.total_high_scores)
 
     def scrape_song_data(self, song):
@@ -378,6 +401,8 @@ class User:
 
         # Get song data from song list
         recentlist = soup.select(".playdata__history-list__wrap > li")
+        self.recents = []
+
         for song in recentlist:
             # play time
             time = song.select_one(".playdata__history-list__song-info__top")
@@ -440,7 +465,10 @@ class User:
         self.navigators = []
         navi_elements = soup.select(".collection__navi-character-list > li > div > img")
         for navi in navi_elements:
+            self.set_progress("navigators", len(self.navigators), len(navi_elements))
             self.navigators.append(get_int(navi["src"]))
+        self.set_progress("navigators", len(self.navigators), len(navi_elements))
+
 
     def get_boxes(self):
         print("Getting box stats...")
@@ -452,7 +480,9 @@ class User:
         self.boxes = []
 
         for box in boxes:
+            self.set_progress("boxes", len(self.boxes), len(boxes))
             self.boxes.append(self.scrape_box(int(box["value"])))
+        self.set_progress("boxes", len(self.boxes), len(boxes))
 
     def get_trophies(self):
         print("Getting trophies...")
@@ -460,18 +490,21 @@ class User:
         self.trophies = []
 
         for season_id in [1,2,3]:
+            self.set_progress("stages", len(self.trophies), 3)
             self.__response = requests.request("POST", f"{endpoint}/trophy/index/get", data=f"seasonId={season_id}",headers=self.gen_cookie() | self.__headers_form_encoded)
 
-            shit = jsons.loads(self.__response.text)
+            blob = jsons.loads(self.__response.text)
 
             season = []
-            for trophy in shit["trophyMasterList"]:
+            for trophy in blob["trophyMasterList"]:
                 season.append(Trophy(trophy["trophyId"], trophy["isHavingTrophy"]))
 
             self.trophies.append(season)
+        self.set_progress("stages", len(self.trophies), 3)
 
     def scrape_box(self,box):
-        #print(f"* Scraping box {box}...")
+        print(f"* Scraping box {box}...")
+
         self.__response = requests.request("POST", f"{endpoint}/box/detail", data=f"boxId={box}", headers=self.gen_cookie() | self.__headers_form_encoded)
         soup = BeautifulSoup(self.__response.text, 'lxml')
 
@@ -510,7 +543,9 @@ class User:
 
         self.gates = []
         for gate in gates:
+            self.set_progress("gates", len(self.gates), len(gates))
             self.gates.append(self.scrape_gate(int(gate["value"])))
+        self.set_progress("gates", len(self.gates), len(gates))
 
     def scrape_gate(self, gate):
         print(f"* Scraping gate {gate}")
@@ -524,8 +559,67 @@ class User:
         
         return Gate(gate, gate_level, gate_progress[0], gate_progress[1])
 
+    def get_stages(self):
+        print("Getting stages...")
+        self.__response = requests.request("GET", f"{endpoint}/stageup", headers=self.gen_cookie())
+        soup = BeautifulSoup(self.__response.text, 'lxml')
+
+        self.stages = []
+        stage_list = soup.select(".stageup__list__link")
+        for stage_item in stage_list:
+            self.set_progress("stages", len(self.stages), len(stage_list))
+            stage_id = int(stage_item["value"])
+
+            print(f"* Getting stage {stage_id}...")
+            # song data
+
+            self.__response = requests.request("POST", f"{endpoint}/stageup/detail", data=f"trialClass={stage_id}", headers=self.gen_cookie() | self.__headers_form_encoded)
+            soup = BeautifulSoup(self.__response.text, 'lxml')
+
+            song_list = soup.select(".stageup__detail__wrap > li")
+            stage_songs = []
+
+            for song_item in song_list:
+                try:
+                    song_id = get_int(song_item.select_one(".stageup__detail__song-icon > img")["src"])
+                except TypeError:
+                    song_id = 0
+
+                song_name = song_item.select_one(".stageup__detail__song-info__name").text
+                song_score = get_int(song_item.select_one(".stageup__detail__song-info__score").text)
+
+                stage_songs.append(StageSong(song_id, song_name, song_score))
+
+            # type of emblem
+
+            stage_details = {"leaderboard": 0}
+
+            emblem = soup.select_one('.stageup__detail__course-icon > img')
+            if emblem:
+                tmp = re.search(r'stage_icon_(\d+)_(\d).png', emblem["src"])
+                stage_details["type"] = int(tmp.group(2))
+
+            # leaderboard
+
+            self.__response = requests.request("POST", f"{endpoint}/ranking/stageupScore/detail", data=f"trialClass={stage_id}", headers=self.gen_cookie() | self.__headers_form_encoded)
+            soup = BeautifulSoup(self.__response.text, 'lxml')
+
+            temp_lb = soup.select_one(".ranking__score__rank.top-rank").text.strip()
+
+            lb_img = soup.select_one(".ranking__score__rank.top-rank > img")
+            if lb_img is not None and "ranking/icon-" in lb_img["src"]:
+                stage_details["leaderboard"] = get_int(soup.select_one(".ranking__score__rank.top-rank > img")["src"])
+            else:
+                stage_details["leaderboard"] = get_int(temp_lb) if temp_lb != "-位" else 0
+
+            self.stages.append(Stage(stage_id, stage_songs, stage_details))
+
+        self.set_progress("stages", len(self.stages), len(stage_list))
+
     def get_friends(self):
         print("Getting friends...")
+        self.set_progress("friends")
+
         self.__response = requests.request("GET", f"{endpoint}/friend/list", headers=self.gen_cookie())
         soup = BeautifulSoup(self.__response.text, 'lxml')
 
@@ -546,6 +640,7 @@ class User:
 
     def get_settings(self):
         print("Getting settings...")
+        self.set_progress("settings")
 
         self.settings = Settings(GameSettings(), DisplaySettings(), DesignSettings(), SoundSettings())
 
@@ -636,7 +731,9 @@ class User:
             setattr(self.settings.sound, setting, setting_value)
 
     def scrape(self):
+        self.__progress = Progress()
         self.get_user_info()
+        self.get_stages()
         self.get_trophies()
         self.get_song_data()
         self.get_recent_plays()
@@ -653,12 +750,14 @@ class User:
         if check_valid:
             print("Validating against WACCA Data schema...")
             validate(instance=jsons.loads(user_json), schema=json.loads(open("schema/wacca_data.schema.json", "r").read()))
+        print("Writing to file...")
         f = open(f"dumps/{self.id}.json", "w")
         f.write(user_json)
         f.close()
+        self.set_progress("done")
 
     def progress(self):
-        return Progress(self.__songs_total, len(self.songs))
+        return self.__progress
 
     def __init__(self, id):
         self.id = id
@@ -680,7 +779,7 @@ def scrape_background(user_id):
 @app.post("/api/scrape/{lang}")
 async def scrape(lang: str="en", userId: str = Form(), background_tasks: BackgroundTasks = BackgroundTasks()):
     if not userId.isdigit(): 
-        return Response(json={"error":"invalid id"}, status_code=400)
+        return JSONResponse(content={"error":"invalid id"}, status_code=400)
     if int(userId) not in users:
         background_tasks.add_task(scrape_background, int(userId))
 
@@ -692,9 +791,9 @@ async def get_progress(id: str):
         if int(id) in users.keys():
             return users[int(id)].progress()
         else:
-            return Response(json={"error": "user not found"}, status_code=404)
+            return JSONResponse(content={"error": "user not found"}, status_code=404)
     else:
-        return Response(json={"error": "invalid id"}, status_code=400)
+        return JSONResponse(content={"error": "invalid id"}, status_code=400)
 
 @app.get("/api/getBasicUser")
 async def get_basic_user(id: str):
