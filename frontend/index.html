@@ -29,6 +29,13 @@
 		        navigator.clipboard.writeText(book).then(function() {alert(text)})
 		    }
 		}
+
+		function getBookmarklet() {
+			fetch('https://w.yello.ooo/book.js')
+			  .then(response => response.text())
+			  .then(response => document.querySelector('#bookmarklet').value = response)
+			  .catch(err => console.error(err));
+		}
     </script>
 </head>
 
@@ -44,7 +51,7 @@
 				<li><p>Bookmark this page.</p>
 				</li>
 				<li><p style="margin-bottom: 0;">Copy this bookmarklet:</p>
-				<p style="margin-top: 0"><input id="bookmarklet" type="text" value="not ready yet" readonly><button type="button" class="btn btn_pink" onclick="copyBookmarklet();">Copy</button></p>
+				<p style="margin-top: 0"><input id="bookmarklet" type="text" readonly><button type="button" class="btn btn_pink" onload="getBookmarklet();" onclick="copyBookmarklet();">Copy</button></p>
 				</li>
 				<li><p>Edit the bookmark and change the address to the string copied in step 2.</p>
 				</li>

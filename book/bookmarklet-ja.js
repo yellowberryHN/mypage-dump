@@ -1,0 +1,1 @@
+javascript:(function(){import('https://w.yello.ooo/inject.js?lang=ja').then((obj)=>obj.main())})();

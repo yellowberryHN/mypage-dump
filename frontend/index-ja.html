@@ -29,6 +29,13 @@
 		        navigator.clipboard.writeText(book).then(function() {alert(text)})
 		    }
 		}
+
+		function getBookmarklet() {
+			fetch('https://w.yello.ooo/book.js?lang=ja')
+			  .then(response => response.text())
+			  .then(response => document.querySelector('#bookmarklet').value = response)
+			  .catch(err => console.error(err));
+		}
     </script>
 </head>
 
@@ -44,7 +51,7 @@
 				<li><p>このページをブックマークします。</p>
 				</li>
 				<li><p style="margin-bottom: 0;">ブックマークレットをコピーします。</p>
-				<p style="margin-top: 0"><input id="bookmarklet" type="text" value="まだ準備ができていません" readonly><button type="button" class="btn btn_pink" onclick="copyBookmarklet();">コピー</button></p>
+				<p style="margin-top: 0"><input id="bookmarklet" type="text" value="まだ準備ができていません" readonly><button type="button" class="btn btn_pink" onload="getBookmarklet();" onclick="copyBookmarklet();">コピー</button></p>
 				</li>
 				<li><p>ステップ1で作成したブックマークのアドレスを、ステップ2でコピーした文字列に書き換えて保存します。</p>
 				</li>

@@ -690,9 +690,17 @@ async def download_file(id: str):
 
 @app.get("/book.js")
 async def get_bookmarklet(lang: str="en"):
-    filename = "book/main.js"
+    filename = "book/bookmarklet.js"
     if lang in extra_langs:
-        filename = f"book/main-{lang}.js"
+        filename = f"book/bookmarklet-{lang}.js"
+    with open(filename, encoding="utf-8") as file:
+        return Response(content=jsmin(file.read()), media_type="text/javascript", headers={"Access-Control-Allow-Origin": "*"})
+
+@app.get("/inject.js")
+async def get_injection(lang: str="en"):
+    filename = "book/inject.js"
+    if lang in extra_langs:
+        filename = f"book/inject-{lang}.js"
     with open(filename, encoding="utf-8") as file:
         return Response(content=jsmin(file.read()), media_type="text/javascript", headers={"Access-Control-Allow-Origin": "*"})
 
