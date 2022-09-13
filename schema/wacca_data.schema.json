@@ -458,34 +458,22 @@
         "titles": {
           "type": "object",
           "properties": {
-            "normal": {
+            "preset": {
               "type": "array",
               "items": {
-                "type": "string"
+                "type": "integer"
               },
               "minItems": 1
             },
             "special": {
               "type": "array",
               "items": {
-                "type": "string"
+                "type": "integer"
               },
               "minItems": 1
-            },
-            "custom": {
-              "type": "array",
-              "items": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                },
-                "minItems": 1
-              },
-              "minItems": 2,
-              "maxItems": 3
             }
           },
-          "required": ["normal", "special"]
+          "required": ["preset", "special"]
         },
         "icons": {
           "type": "array",

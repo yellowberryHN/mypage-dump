@@ -13,13 +13,6 @@ from jsonschema import validate
 from datetime import datetime
 import pytz
 
-"""
-
-Left to implement:
-- titles
-
-"""
-
 endpoint = os.environ.get("MYPAGE_ENDPOINT")
 endpoint = endpoint if endpoint is not None else ""
 
@@ -30,7 +23,7 @@ os.makedirs("dumps", exist_ok=True) # create dumps directory if it doesn't exist
 
 jst = pytz.timezone("Asia/Tokyo") # used for time conversion
 magic = codecs.decode("nvzrVq","rot-13") # hi sega
-full_dump = False # dump play count
+full_dump = True # dump play count
 check_valid = True # validate json output against schema
 
 extra_langs = ["ja"]
@@ -273,6 +266,7 @@ class User:
         self.__songs_total = int(soup.select_one('span.score-point__difficulty.difficulty__normal').text)
 
         print("Getting mission stage (bingo)...")
+        self.set_progress("mission")
         self.__response = requests.request("GET", f"{endpoint}/mission", headers=self.gen_cookie())
         soup = BeautifulSoup(self.__response.text, 'lxml')
         self.mission_stage = int(soup.select_one(".current-sheet-num > span").text)
@@ -395,6 +389,7 @@ class User:
 
     def get_recent_plays(self):
         print("Getting recent plays...")
+        self.set_progress("recents")
         self.__response = requests.request("GET", f"{endpoint}/history", headers=self.gen_cookie())
 
         soup = BeautifulSoup(self.__response.text, 'lxml')
@@ -435,6 +430,7 @@ class User:
 
     def get_icons(self):
         print("Getting unlocked icons...")
+        self.set_progress("icons")
         self.__response = requests.request("GET", f"{endpoint}/icon", headers=self.gen_cookie())
         soup = BeautifulSoup(self.__response.text, 'lxml')
 
@@ -445,6 +441,7 @@ class User:
 
     def get_plates(self):
         print("Getting unlocked plates...")
+        self.set_progress("plates")
         self.__response = requests.request("GET", f"{endpoint}/plate", headers=self.gen_cookie())
         soup = BeautifulSoup(self.__response.text, 'lxml')
 
@@ -490,7 +487,7 @@ class User:
         self.trophies = []
 
         for season_id in [1,2,3]:
-            self.set_progress("stages", len(self.trophies), 3)
+            self.set_progress("trophies", len(self.trophies), 3)
             self.__response = requests.request("POST", f"{endpoint}/trophy/index/get", data=f"seasonId={season_id}",headers=self.gen_cookie() | self.__headers_form_encoded)
 
             blob = jsons.loads(self.__response.text)
@@ -500,7 +497,7 @@ class User:
                 season.append(Trophy(trophy["trophyId"], trophy["isHavingTrophy"]))
 
             self.trophies.append(season)
-        self.set_progress("stages", len(self.trophies), 3)
+        self.set_progress("trophies", len(self.trophies), 3)
 
     def scrape_box(self,box):
         print(f"* Scraping box {box}...")
@@ -526,6 +523,7 @@ class User:
 
     def get_unlocks(self):
         print("Getting unlocked special songs...")
+        self.set_progress("unlocks")
         self.__response = requests.request("GET", f"{endpoint}/music/unlock", headers=self.gen_cookie())
         soup = BeautifulSoup(self.__response.text, 'lxml')
 
@@ -634,8 +632,6 @@ class User:
             friend_icon = get_int(friend.div.select_one(".icon__image > img")["src"])
             friend_color = get_int(friend.div.select_one(".symbol__color__base > img")["src"])
 
-            # TODO add favorite
-
             self.friends.append(Friend(friend_name, friend_code, friend_level, friend_rate, friend_icon, friend_color))
 
     def get_settings(self):
@@ -732,17 +728,29 @@ class User:
 
 
     def get_titles(self):
-        print("Getting user titles")
-        self.__response = requests.request("GET", f"{endpoint}/title", headers=self.gen_cookie())
+        print("Getting user titles...")
+        self.set_progress("titles")
+
+        preset_titles = []
+        special_titles = []
+
+        self.__response = requests.request("GET", f"{endpoint}/title/preset", headers=self.gen_cookie())
         soup = BeautifulSoup(self.__response.text, 'lxml')
 
-        current_title = soup.select("div.collection__current-title > dl > dd").text
-
-        unlocked_titles = soup.select("ul.collection_title-list")
+        unlocked_titles = soup.select("ul.collection__title-list > li")
 
         for title in unlocked_titles:
-            title_name = title.select("p").text
-            title_rank = title.select("div.title-list__rank")
+            preset_titles.append(int(title["data-title_id"]))
+
+        self.__response = requests.request("GET", f"{endpoint}/title/special", headers=self.gen_cookie())
+        soup = BeautifulSoup(self.__response.text, 'lxml')
+
+        unlocked_titles = soup.select("ul.collection__title-list > li")
+
+        for title in unlocked_titles:
+            special_titles.append(int(title["data-title_id"]))
+
+        self.titles = {"preset": preset_titles, "special": special_titles}
 
     def scrape(self):
         self.__progress = Progress()
@@ -764,8 +772,10 @@ class User:
         user_json = jsons.dumps({"player": self}, key_transformer=jsons.KEY_TRANSFORMER_CAMELCASE, strip_privates=True)
         if check_valid:
             print("Validating against WACCA Data schema...")
+            self.set_progress("validate")
             validate(instance=jsons.loads(user_json), schema=json.loads(open("schema/wacca_data.schema.json", "r").read()))
         print("Writing to file...")
+        self.set_progress("write")
         f = open(f"dumps/{self.id}.json", "w")
         f.write(user_json)
         f.close()
