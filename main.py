@@ -730,6 +730,20 @@ class User:
 
             setattr(self.settings.sound, setting, setting_value)
 
+
+    def get_titles(self):
+        print("Getting user titles")
+        self.__response = requests.request("GET", f"{endpoint}/title", headers=self.gen_cookie())
+        soup = BeautifulSoup(self.__response.text, 'lxml')
+
+        current_title = soup.select("div.collection__current-title > dl > dd").text
+
+        unlocked_titles = soup.select("ul.collection_title-list")
+
+        for title in unlocked_titles:
+            title_name = title.select("p").text
+            title_rank = title.select("div.title-list__rank")
+
     def scrape(self):
         self.__progress = Progress()
         self.get_user_info()
@@ -745,6 +759,7 @@ class User:
         #self.get_unlocks() # special unlocks have been disabled and no longer appear.
         self.get_friends()
         self.get_settings()
+        self.get_titles()
         print(time.perf_counter() - self.__start_time)
         user_json = jsons.dumps({"player": self}, key_transformer=jsons.KEY_TRANSFORMER_CAMELCASE, strip_privates=True)
         if check_valid:
