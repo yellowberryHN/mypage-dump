@@ -73,6 +73,8 @@ class Progress:
      "total": 0,
     }
 
+    history = ""
+
 class Song:
     def __init__(self, id, name):
         self.id = id
@@ -86,12 +88,14 @@ class PersonalBest(Song):
         self.play_count = 0
 
 class RecentPlay(Song):
-    def __init__(self, id, score, name, timestamp, difficulty, judgements, timings, max_combo, new_record):
+    def __init__(self, id, score, name, timestamp, difficulty, rating, achieve, judgements, timings, max_combo, new_record):
         self.id = id 
         self.__name = name
         self.score = score
         self.timestamp = timestamp
         self.difficulty = difficulty
+        self.rating = rating
+        self.achieve = achieve
         self.judgements = judgements
         self.timings = timings
         self.max_combo = max_combo
@@ -209,12 +213,15 @@ class User:
     __ua = generate_user_agent(navigator="chrome",device_type=("smartphone","desktop"))
     __headers_form_encoded = {"Content-Type": "application/x-www-form-urlencoded"} 
 
-    name = ""
-    songs = []
-
     def set_progress(self, step, completed = 0, total = 0):
         if not self.__progress:
             self.__progress = Progress()
+
+        if step != self.__progress.step:
+            if self.__progress.history == "":
+                self.__progress.history = self.__progress.step
+            else:
+                self.__progress.history = self.__progress.history + "," + self.__progress.step
 
         self.__progress.step = step
         self.__progress.count = {
@@ -402,8 +409,7 @@ class User:
             # play time
             time = song.select_one(".playdata__history-list__song-info__top")
             time.span.decompose()
-            timestamp = jst.localize(datetime.strptime(time.text,'%Y/%m/%d %H:%M:%S')).astimezone(pytz.utc)
-            #print(timestamp)
+            timestamp = jst.localize(datetime.strptime(time.text,'%Y/%m/%d %H:%M:%S')).astimezone(pytz.utc).isoformat()
 
             name = song.select_one(".playdata__history-list__song-info__name").text
             song_id = int(song.select_one("#musicId")["value"])
@@ -424,7 +430,22 @@ class User:
 
             new_record = song.select_one(".playdata__history-list__new-btn") is not None
 
-            recent = RecentPlay(song_id, score, name, timestamp, diff, judgements, timings, max_combo, new_record)
+            # difficulty rate and achieve
+            icons = song.select(".playdata__history-list__icon > div > img")
+
+            temp_rating = icons[0]["src"].replace("/img/web/music/rate_icon/", "").split(".")[0]
+            rating = 0
+
+            if temp_rating.startswith("rate_"):
+                rating = int(temp_rating.split("_")[1])
+                
+            temp_achieve = icons[1]["src"].replace("/img/web/music/achieve_icon/", "").split(".")[0]
+            achieve = 0
+
+            if temp_achieve.startswith("achieve"):
+                achieve = int(temp_achieve.replace("achieve",""))
+
+            recent = RecentPlay(song_id, score, name, timestamp, diff, rating, achieve, judgements, timings, max_combo, new_record)
         
             self.recents.append(recent)
 
@@ -754,6 +775,7 @@ class User:
 
     def scrape(self):
         self.__progress = Progress()
+
         self.get_user_info()
         self.get_stages()
         self.get_trophies()
@@ -768,6 +790,7 @@ class User:
         self.get_friends()
         self.get_settings()
         self.get_titles()
+
         print(time.perf_counter() - self.__start_time)
         user_json = jsons.dumps({"player": self}, key_transformer=jsons.KEY_TRANSFORMER_CAMELCASE, strip_privates=True)
         if check_valid:
@@ -779,6 +802,7 @@ class User:
         f = open(f"dumps/{self.id}.json", "w")
         f.write(user_json)
         f.close()
+
         self.set_progress("done")
 
     def progress(self):
@@ -822,8 +846,8 @@ async def get_progress(id: str):
 
 @app.get("/api/getBasicUser")
 async def get_basic_user(id: str):
-    if id in users.keys():
-        user = users[id]
+    if int(id) in users.keys():
+        user = users[int(id)]
         
         return {
             "name": user.name,

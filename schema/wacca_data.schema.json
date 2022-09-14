@@ -371,6 +371,32 @@
                 "type": "integer",
                 "maximum": 1000000
               },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "newRecord": {
+                "type": "boolean"
+              },
+              "maxCombo": {
+                "type": "integer"
+              },
+              "judgements": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                },
+                "minItems": 4,
+                "maxItems": 4
+              },
+              "timings": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                },
+                "minItems": 2,
+                "maxItems": 2
+              },
               "rating": {
                 "type": "integer"
               },
