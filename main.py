@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 from user_agent import generate_user_agent
 
 # validation
-from jsonschema import validate
+from jsonschema import Draft202012Validator, FormatChecker
 
 # time stuff
 from datetime import datetime
@@ -23,8 +23,8 @@ os.makedirs("dumps", exist_ok=True) # create dumps directory if it doesn't exist
 
 jst = pytz.timezone("Asia/Tokyo") # used for time conversion
 magic = codecs.decode("nvzrVq","rot-13") # hi sega
-full_dump = True # dump play count
-check_valid = True # validate json output against schema
+full_dump = False # dump play count
+check_valid = False # validate json output against schema
 
 extra_langs = ["ja"]
 
@@ -67,13 +67,14 @@ class BasicDifficultyStats:
 
 class Progress:
     step = "userinfo"
+    message = ""
 
     count = {
      "completed": 0,
      "total": 0,
     }
 
-    history = ""
+    history = []
 
 class Song:
     def __init__(self, id, name):
@@ -212,18 +213,17 @@ class User:
     __songs_total = 0
     __ua = generate_user_agent(navigator="chrome",device_type=("smartphone","desktop"))
     __headers_form_encoded = {"Content-Type": "application/x-www-form-urlencoded"} 
+    __progress = None
 
     def set_progress(self, step, completed = 0, total = 0):
-        if not self.__progress:
+        if self.__progress is None:
             self.__progress = Progress()
 
         if step != self.__progress.step:
-            if self.__progress.history == "":
-                self.__progress.history = self.__progress.step
-            else:
-                self.__progress.history = self.__progress.history + "," + self.__progress.step
+            self.__progress.history.append(step)
 
         self.__progress.step = step
+        self.__progress.message = f"Step {len(self.__progress.history)+1}: {self.__progress.step.title()}..."
         self.__progress.count = {
             "completed": completed,
             "total": total
@@ -409,7 +409,7 @@ class User:
             # play time
             time = song.select_one(".playdata__history-list__song-info__top")
             time.span.decompose()
-            timestamp = jst.localize(datetime.strptime(time.text,'%Y/%m/%d %H:%M:%S')).astimezone(pytz.utc).isoformat()
+            timestamp = str(jst.localize(datetime.strptime(time.text,'%Y/%m/%d %H:%M:%S')).astimezone(pytz.utc).isoformat())
 
             name = song.select_one(".playdata__history-list__song-info__name").text
             song_id = int(song.select_one("#musicId")["value"])
@@ -657,11 +657,12 @@ class User:
 
     def get_settings(self):
         print("Getting settings...")
-        self.set_progress("settings")
+        self.set_progress("settings", 0, 4)
 
         self.settings = Settings(GameSettings(), DisplaySettings(), DesignSettings(), SoundSettings())
 
         print("* Game...")
+
 
         for setting in ["noteSpeed","judgeLineTiming","mask","movie","bonusNoteEffect","mirror","giveup"]:
             self.__response = requests.request("GET", f"{endpoint}/option/{setting}", headers=self.gen_cookie())
@@ -682,6 +683,7 @@ class User:
                 setting_value = int(soup.select_one('option[selected]')["value"])
 
             setattr(self.settings.game, setting, setting_value)
+        self.set_progress("settings", 1, 4)
 
         print("* Display...")
 
@@ -701,6 +703,7 @@ class User:
                 setting_value = int(soup.select_one("div.option_image_select_content.selected > input")["value"])
 
             setattr(self.settings.display, setting, setting_value)
+        self.set_progress("settings", 2, 4)
 
         print("* Design...")
 
@@ -726,6 +729,7 @@ class User:
                 setting_value = int(soup.select_one("div.option_image_select_content.selected > input")["value"])
 
             setattr(self.settings.design, setting, setting_value)
+        self.set_progress("settings", 3, 4)
 
         print("* Sound...")
 
@@ -746,6 +750,7 @@ class User:
                 setting_value = int(soup.select_one('option[selected]').text)
 
             setattr(self.settings.sound, setting, setting_value)
+        self.set_progress("settings", 4, 4)
 
 
     def get_titles(self):
@@ -796,7 +801,8 @@ class User:
         if check_valid:
             print("Validating against WACCA Data schema...")
             self.set_progress("validate")
-            validate(instance=jsons.loads(user_json), schema=json.loads(open("schema/wacca_data.schema.json", "r").read()))
+            jsv = Draft202012Validator(schema=json.loads(open("schema/wacca_data.schema.json", "r").read()), format_checker=FormatChecker())
+            jsv.validate(jsons.loads(user_json))
         print("Writing to file...")
         self.set_progress("write")
         f = open(f"dumps/{self.id}.json", "w")
@@ -808,12 +814,22 @@ class User:
     def progress(self):
         return self.__progress
 
-    def __init__(self, id):
+    def __init__(self, id, exists):
         self.id = id
-        self.__start_time = time.perf_counter()
-        self.login_request()
-        self.gen_cookie()
-        self.__timestamp = time.time()
+        if not exists:
+            self.__start_time = time.perf_counter()
+            self.login_request()
+            self.gen_cookie()
+            self.__timestamp = time.time()
+        else:
+            userdata = json.loads(open(f"dumps/{self.id}.json", "r").read())["player"]
+            self.name = userdata["name"]
+            self.level = userdata["level"]
+            self.title = userdata["title"]
+            self.points = userdata["points"]
+            self.icon = userdata["icon"]
+            self.color = userdata["color"]
+            self.set_progress("done")
 
 
 app = FastAPI()
@@ -821,16 +837,17 @@ app.mount("/static/", StaticFiles(directory="frontend", html=True), name="fronte
 
 users = {}
 
-def scrape_background(user_id):
-    users[user_id] = User(user_id)
-    users[user_id].scrape()
+def scrape_background(user_id, exists):
+    users[user_id] = User(user_id, exists)
+    if not exists:
+        users[user_id].scrape()
 
 @app.post("/api/scrape/{lang}")
 async def scrape(lang: str="en", userId: str = Form(), background_tasks: BackgroundTasks = BackgroundTasks()):
     if not userId.isdigit(): 
         return JSONResponse(content={"error":"invalid id"}, status_code=400)
     if int(userId) not in users:
-        background_tasks.add_task(scrape_background, int(userId))
+        background_tasks.add_task(scrape_background, int(userId), os.path.exists(f"dumps/{int(userId)}.json"))
 
     return RedirectResponse(url=f"/progress?id={userId}&lang={lang}", status_code=303)
 
@@ -853,7 +870,9 @@ async def get_basic_user(id: str):
             "name": user.name,
             "level": user.level,
             "title": user.title,
-            "points": user.points
+            "points": user.points,
+            "icon": user.icon,
+            "color": user.color
         }
     else:
         return {"error": "User not found"}

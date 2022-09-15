@@ -65,6 +65,8 @@ function loadUserData(userId) {
       document.getElementById("name").textContent = userDataJson["name"]
       document.getElementById("title").textContent = userDataJson["title"]
       document.getElementById("points").textContent = userDataJson["points"]
+      document.getElementById("icon").src = "/static/assets/icon/" + userDataJson["icon"] + ".png"
+      document.getElementById("color").src = "/static/assets/color/" + userDataJson["color"] + ".png"
     }
     else {
       setTimeout(loadUserData, 10000, userId)
@@ -83,7 +85,7 @@ function downloadDump() {
     a.style.display = 'none';
     a.href = url;
     // the filename you want
-    a.download = 'my_wacca_data.json';
+    a.download = 'wacca_data_'+userId+'.json';
     document.body.appendChild(a);
     a.click();
     window.URL.revokeObjectURL(url);
