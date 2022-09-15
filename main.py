@@ -66,7 +66,7 @@ class BasicDifficultyStats:
 
 
 class Progress:
-    step = "userinfo"
+    current_step = "userinfo"
     message = ""
 
     count = {
