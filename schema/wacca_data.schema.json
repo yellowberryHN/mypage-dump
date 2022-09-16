@@ -355,6 +355,18 @@
           "minItems": 1,
           "maxItems": 100
         },
+        "trophies": {
+          "description": "A list of all 3 seasons of trophies.",
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
         "recents": {
           "description": "A list of up to 50 of the most recent plays, and their score breakdown",
           "type": "array",

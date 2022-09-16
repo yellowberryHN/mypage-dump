@@ -23,7 +23,7 @@ os.makedirs("dumps", exist_ok=True) # create dumps directory if it doesn't exist
 
 jst = pytz.timezone("Asia/Tokyo") # used for time conversion
 magic = codecs.decode("nvzrVq","rot-13") # hi sega
-full_dump = False # dump play count
+full_dump = True # dump play count
 check_valid = False # validate json output against schema
 
 extra_langs = ["ja"]
@@ -219,11 +219,11 @@ class User:
         if self.__progress is None:
             self.__progress = Progress()
 
-        if step != self.__progress.step:
+        if step != self.__progress.current_step:
             self.__progress.history.append(step)
 
-        self.__progress.step = step
-        self.__progress.message = f"Step {len(self.__progress.history)+1}: {self.__progress.step.title()}..."
+        self.__progress.current_step = step
+        self.__progress.message = f"Step {len(self.__progress.history)+1}: {self.__progress.current_step.title()}..."
         self.__progress.count = {
             "completed": completed,
             "total": total

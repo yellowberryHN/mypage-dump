@@ -1,4 +1,4 @@
-let hostname = "https://w.yello.ooo/";
+let hostname = "";
 function newBar(elementId) {
     let bar = new ProgressBar.Circle(document.getElementById(elementId), {
         color: '#aaa',
@@ -30,22 +30,23 @@ function newBar(elementId) {
 function updateProgress(userId) {
     const http = new XMLHttpRequest();
 
-    http.open("GET", hostname + "api/getProgress?id=" + userId);
+    http.open("GET", hostname + "/api/getProgress?id=" + userId);
     http.send();
 
     http.onload = () => {
         let progressJson = JSON.parse(http.responseText);
-        if (progressJson.currentStep != "done") {
+        if (progressJson.current_step != "done") {
             document.getElementById("step-text").textContent = progressJson.message;
             progressBar.setText(progressJson.count.completed + "/" + progressJson.count.total);
             progressBar.animate(progressJson.count.completed / progressJson.count.total);
         } else {
             progressBar.setText('Completed!');
+            progressBar.animate(1);
             document.getElementById("progress-container").classList.add("hidden");
             loadUserData(userId);
             setTimeout(function () {
                 document.getElementById("ui").classList.add("visible");
-            }, 10000);
+            }, 1000);
 
             clearInterval(updateInterval);
         }
@@ -55,7 +56,7 @@ function updateProgress(userId) {
 function loadUserData(userId) {
     const http = new XMLHttpRequest();
 
-    http.open("GET", hostname + "api/getBasicUser?id=" + userId);
+    http.open("GET", hostname + "/api/getBasicUser?id=" + userId);
     http.send();
 
     http.onload = () => {
@@ -70,17 +71,14 @@ function loadUserData(userId) {
             document.getElementById("points").textContent = userDataJson["points"];
             document.getElementById("icon").src = "/static/assets/icon/" + userDataJson["icon"] + ".png";
             document.getElementById("color").src = "/static/assets/color/" + userDataJson["color"] + ".png";
-        }
         } else {
-            setTimeout(loadUserData, 10000, userId);
+            setTimeout(loadUserData, 1000, userId);
         }
     }
-
-
 }
 
 function downloadDump() {
-    fetch(hostname + "api/download?id=" + userId)
+    fetch(hostname + "/api/download?id=" + userId)
         .then(resp => resp.blob())
         .then(blob => {
             const url = window.URL.createObjectURL(blob);
@@ -99,4 +97,4 @@ function downloadDump() {
 
 let progressBar = newBar("progress1");
 let userId = new URLSearchParams(location.search).get("id");
-let updateInterval = setInterval(updateProgress, 10000, userId);
+let updateInterval = setInterval(updateProgress, 1000, userId);
