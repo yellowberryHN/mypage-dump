@@ -1,4 +1,6 @@
 let hostname = "";
+let lastStep = "";
+
 function newBar(elementId) {
     let bar = new ProgressBar.Circle(document.getElementById(elementId), {
         color: '#aaa',
@@ -35,10 +37,21 @@ function updateProgress(userId) {
 
     http.onload = () => {
         let progressJson = JSON.parse(http.responseText);
+
+        if (progressJson.current_step != lastStep) { 
+            lastStep = progressJson.current_step; 
+            progressBar.set(0); 
+        }
+
         if (progressJson.current_step != "done") {
             document.getElementById("step-text").textContent = progressJson.message;
-            progressBar.setText(progressJson.count.completed + "/" + progressJson.count.total);
-            progressBar.animate(progressJson.count.completed / progressJson.count.total);
+            if(progressJson.count.total > 0) {
+                progressBar.setText(progressJson.count.completed + "/" + progressJson.count.total);
+                progressBar.animate(progressJson.count.completed / progressJson.count.total);
+            } else {
+                progressBar.set(0);
+                progressBar.setText("...");
+            } 
         } else {
             progressBar.setText('Completed!');
             progressBar.animate(1);
