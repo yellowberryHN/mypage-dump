@@ -361,7 +361,16 @@
           "items": {
             "type": "array",
             "items": {
-              "type": "integer"
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer"
+                },
+                "unlocked": {
+                  "type": "boolean"
+                }
+              },
+              "required": ["id", "unlocked"]
             }
           },
           "minItems": 3,

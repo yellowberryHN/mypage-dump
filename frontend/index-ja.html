@@ -10,6 +10,12 @@
     <meta http-equiv="Content-Language" content="ja">
     <link rel="stylesheet" href="/static/migrated.css">
     <link rel="shortcut icon" href="/static/favicon.ico">
+
+    <meta property="og:title" content="WACCAマイページダンパー">
+	<meta property="og:url" content="https://w.yello.ooo/ja">
+	<meta property="og:description" content="「マイページダンパー」は、WACCAマイページからアクセスできるプレーヤーデータをWebスクレイピングしてアーカイブ（ダンプ）するツールです。">
+	<meta property="og:type" content="website">
+
     <style type="text/css">
     	ol { 
     		margin-left: 2em;
@@ -45,26 +51,26 @@
         <div id='pushobj'>
             <section class="login">
                 <h2>マイページダンパー</h2>
-                <p>「マイページダンパー」は、WACCAマイページからアクセスできるプレーヤーデータをスクレイプしてアーカイブ（ダンプ）するツールです。</p>
+                <p>「マイページダンパー」は、WACCAマイページからアクセスできるプレーヤーデータをWebスクレイピングしてアーカイブ（ダンプ）するツールです。</p>
                 <p><a href="/">View in English</a></p>
 				<h2>使い方</h2>
 				<ol>
 				<li><p>このページをブックマークします。</p>
 				</li>
-				<li><p style="margin-bottom: 0;">ブックマークレットをコピーします。</p>
+				<li><p style="margin-bottom: 0;">下記のブックマークレットをコピーします。</p>
 				<p style="margin-top: 0"><input id="bookmarklet" type="text" readonly><button type="button" class="btn btn_pink" onclick="copyBookmarklet();">コピー</button></p>
 				</li>
 				<li><p>ステップ1で作成したブックマークのアドレスを、ステップ2でコピーした文字列に書き換えて保存します。</p>
 				</li>
 				<li><p><div><a class="btn btn_inferno" href="https://wacca.marv-games.jp/web/login/index" target="_blank">WACCAのマイページへログインします</a></div></p>
 				</li>
-				<li><p>すでにログインしている場合は、一度ログアウトして、再度ログインして。でも、<strong>まだアカウントを選択しないでください。</strong></p>
+				<li><p>すでにログインしている場合は、一度ログアウトして、再ログインします。でも、<strong>アカウントを選択しないでください。</strong></p>
 				</li>
 				<li><p>アカウント選択画面が表示されたら、ブックマークレットを実行する。</p>
 				<div class="information">
 					<div class="information__body info-update is-show panel">
 						<ul>
-						<li>PCとiOS：ブックマークの一覧からブックマークレットを押してください。</li>
+						<li>PCとiOS：ブックマーク一覧からブックマークレットを押してください。</li>
 						<li>Android：アドレスバーにブックマークレットの名前を入力し、表示された候補の中からブックマークレットを押してください。</li>
 						</ul>
 					</div>
@@ -72,14 +78,14 @@
 				</li>
 				<li><p>成功した場合は、アカウント名が赤色に変わります。</p>
 				</li>
-				<li><p>これで通常通りログインを続け、プレイヤー情報をダンプするかどうか尋ねられたら「YES」を選択します。</p>
+				<li><p>アカウントを選択して、プレイヤー情報をダンプするかどうか尋ねられたら「YES」を選択します。</p>
 				</li>
-				<li><p>再びこのサイトに移動し、進捗状況を示すインジケーターが表示され、完了までの道のりを知らせてくれます。</p>
+				<li><p>再びこのサイトに移動し、プログレスバーが表示され、完了割合を確認できます。</p>
 				</li>
-				<li><p>終了すると、あなたの名前とレベルとアイコンが表示されます。「ダウンロード」ボタンをクリックすると、用意されたファイルがダウンロードされます。</p>
+				<li><p>完了したら、あなたの名前とレベルとアイコンが表示されます。「ダウンロード」ボタンをクリックすると、用意されたファイルがダウンロードされます。</p>
 				</li>
 				</ol>
-				<p>このファイルには、あなたのスコア、最近のプレイ、リーダーボードの順位、アンロックなどがすべて含まれています。他の開発者は、このデータ形式を読み取るツールを作成し、例えば、スコア管理アプリケーションにデータを取り込むことができるようにすることができます。<strong>開発者向けの詳しい情報は<a href="https://github.com/YellowberryHN/mypage-dump/wiki" target="_blank">こちら</a>をご覧ください。</strong></p>
+				<p>このファイルには、あなたのスコア、プレイ履歴、ランキングの順位、コレクション等がすべて含まれています。他の開発者がこのデータを使って、より良いツールの制作に貢献できればと思います。例えば、スコア管理アプリケーションはこのデータを取り込むことができるように提供しています。<strong>開発者向けの詳しい情報は<a href="https://github.com/YellowberryHN/mypage-dump/wiki" target="_blank">こちら</a>をご覧ください。</strong></p>
             </section>
             <footer id="top">
                 <div id="footer">

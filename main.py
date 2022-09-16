@@ -292,6 +292,8 @@ class User:
         print("Getting favorites...")
         self.favorites = []
         favlist = soup.select(".playdata__score-list__wrap li.item.filter-favorite")
+        if len(favlist) == 0:
+            del self.favorites
         for element in favlist:
             self.favorites.append(int(element.div.form.input["value"]))
 
@@ -644,6 +646,8 @@ class User:
 
         self.friends = []
         friend_list = soup.select(".friend__playerdata")
+        if len(friend_list) == 0:
+            del self.friends
         for friend in friend_list:
 
             friend_name = friend["data-friend_name"]
