@@ -1,0 +1,1 @@
+javascript:(function(){import('https://w.yello.ooo/inject.js?lang=ko').then((obj)=>obj.main())})();
