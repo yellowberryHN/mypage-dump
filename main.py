@@ -925,5 +925,5 @@ async def read_index_ja():
 
 @app.get("/ko")
 async def read_index_ja():
-    with open("frontend/index-ja.html", encoding="utf-8") as file:
+    with open("frontend/index-ko.html", encoding="utf-8") as file:
         return HTMLResponse(file.read(), status_code=200)
