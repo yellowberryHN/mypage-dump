@@ -26,7 +26,7 @@ magic = codecs.decode("nvzrVq","rot-13") # hi sega
 full_dump = True # dump play count
 check_valid = False # validate json output against schema
 
-extra_langs = ["ja"]
+extra_langs = ["ja", "ko"]
 
 difficulty_dict = {
     "NORMAL": 0,
