@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>마이페이지 덤퍼</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="format-detection" content="telephone=no">
+    <meta http-equiv="Content-Language" content="ko">
+    <link rel="stylesheet" href="/static/migrated.css">
+    <link rel="shortcut icon" href="/static/favicon.ico">
+
+    <meta property="og:title" content="WACCA 마이페이지 덤퍼">
+	<meta property="og:url" content="https://w.yello.ooo/ko">
+	<meta property="og:description" content="&quot;마이페이지 덤퍼&quot;는 WACCA 마이페이지 웹사이트에서 접근 가능한 모든 플레이어 데이터를 불러와 저장하는 도구입니다.">
+	<meta property="og:type" content="website">
+
+    <style type="text/css">
+    	ol { 
+    		margin-left: 2em;
+    	}
+    	ol li {
+    		list-style: inherit;
+    	}
+    </style>
+    <script type="text/javascript">
+    	function copyBookmarklet() {
+		    const book = document.querySelector('#bookmarklet').value
+		    const text = "복사했습니다!";
+
+		    if (navigator.clipboard == undefined) {
+		        window.clipboardData.setData('Text', book);
+		        alert(text);
+		    } else {
+		        navigator.clipboard.writeText(book).then(function() {alert(text)})
+		    }
+		}
+
+		function getBookmarklet() {
+			fetch('https://w.yello.ooo/book.js?lang=ko')
+			  .then(response => response.text())
+			  .then(response => document.querySelector('#bookmarklet').value = response)
+			  .catch(err => console.error(err));
+		}
+    </script>
+</head>
+
+<body onload="getBookmarklet();">
+    <div class='container'>
+        <div id='pushobj'>
+            <section class="login">
+                <h2>마이페이지 덤퍼</h2>
+                <p>&quot;마이페이지 덤퍼&quot;는 WACCA 마이페이지 웹사이트에서 접근 가능한 모든 플레이어 데이터를 불러와 저장하는 도구입니다.</p>
+				<p><a href="/">View in English</a></p>
+                <p><a href="/ja">日本語で見る</a></p>
+ 				<h2>사용법</h2>
+				<ol>
+				<li><p>이 페이지를 북마크에 등록합니다.</p>
+				</li>
+				<li><p style="margin-bottom: 0;">아래의 북마클릿을 복사합니다.</p>
+				<p style="margin-top: 0"><input id="bookmarklet" type="text" readonly><button type="button" class="btn btn_pink" onclick="copyBookmarklet();">복사하기</button></p>
+				</li>
+				<li><p>북마크의 주소를 2단계에서 복사한 텍스트로 변경합니다.</p>
+				</li>
+				<li><p><div><a class="btn btn_inferno" href="https://wacca.marv-games.jp/web/login/index" target="_blank">WACCA 마이페이지에 로그인합니다.</a></div></p>
+				</li>
+				<li><p>이미 로그인되어 있는 상태라면 로그아웃을 하고 다시 로그인을 합니다. <strong>다만, 계정 선택은 아직 하지 말아주세요!</strong></p>
+				</li>
+				<li><p>계정 선택 페이지에 들어왔다면, 북마클릿을 실행시켜 주세요.</p>
+				<div class="information">
+					<div class="information__body info-update is-show panel">
+						<ul>
+						<li>PC, iOS: 북마크를 열고, 생성한 북마크를 찾아 누릅니다.</li>
+						<li>Android: 북마크의 이름을 주소창에 치고, 검색된 추천 목록에서 북마크를 찾아 누릅니다.</li>
+						</ul>
+					</div>
+				</div>
+				</li>
+				<li><p>북마크 실행이 성공하면, 계정의 닉네임이 빨갛게 변합니다.</p>
+				</li>
+				<li><p>이제 보통처럼 로그인을 계속하면 되고 플레이어 정보를 저장할 것이냐 묻는 창이 뜨면, "YES"를 눌러주세요.</p>
+				</li>
+				<li><p>그 후, 이 웹사이트로 리다이렉트되고, 진행 표시창으로 완료까지 얼마나 남았는지 알 수 있습니다.</p>
+				</li>
+				<li><p>데이터 읽기가 완료되면, 유저의 닉네임, 레벨, 아이콘이 보입니다. &quot;다운로드&quot; 버튼을 눌러 파일을 다운로드 받을 수 있습니다.</p>
+				</li>
+				</ol>
+				<p>이 파일은 유저의 점수, 최근 플레이, 랭킹, 수집품 등의 정보를 담고있습니다. 다른 개발자들은 이 데이터를 읽는 프로그램, 예를 들면 점수 저장 프로그램에 이 데이터를 넣는 기능 등을 제작할 수 있습니다. <strong>개발자를 위한 자세한 정보는 <a href="https://github.com/YellowberryHN/mypage-dump/wiki" target="_blank">이곳</a>에서 확인할 수 있습니다.</strong></p>
+            </section>
+            <footer id="top">
+                <div id="footer">
+                    <hr />
+                    <div id="logo_copyright">
+                        <p>Created with &#x1F49B; by <a href="https://yello.ooo">Yellowberry</a>, <a href="https://twitter.com/JustACoalRock">Coal</a> and <a href="https://twitter.com/cindytrieuart">citrue</a></p>
+                    </div>
+            </footer>
+        </div>
+    </div>
+</body>
+
+</html>
