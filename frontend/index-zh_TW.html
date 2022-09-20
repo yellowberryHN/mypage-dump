@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>MyPage Dumper</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="format-detection" content="telephone=no">
+    <meta http-equiv="Content-Language" content="zh_TW">
+    <link rel="stylesheet" href="/static/migrated.css">
+    <link rel="shortcut icon" href="/static/favicon.ico">
+
+    <meta property="og:title" content="WACCA MyPage Dumper">
+	<meta property="og:url" content="https://w.yello.ooo/">
+	<meta property="og:description" content="&quot;MyPage Dumper&quot; 是一個可提供線上自動化截取一切玩家們在Wacca MyPage中儲存的所有遊戲資料的工具，截取完畢後玩家們可以將打包好的資料下載儲存起來，以免將來MyPage終止後資料遺失！">
+	<meta property="og:type" content="website">
+
+    <style type="text/css">
+    	ol { 
+    		margin-left: 2em;
+    	}
+    	ol li {
+    		list-style: inherit;
+    	}
+    </style>
+    <script type="text/javascript">
+    	function copyBookmarklet() {
+		    const book = document.querySelector('#bookmarklet').value
+		    const text = "已複製！";
+
+		    if (navigator.clipboard == undefined) {
+		        window.clipboardData.setData('Text', book);
+		        alert(text);
+		    } else {
+		        navigator.clipboard.writeText(book).then(function() {alert(text)})
+		    }
+		}
+
+		function getBookmarklet() {
+			fetch('https://w.yello.ooo/book.js?lang=zh_TW')
+			  .then(response => response.text())
+			  .then(response => document.querySelector('#bookmarklet').value = response)
+			  .catch(err => console.error(err));
+		}
+    </script>
+</head>
+
+<body onload="getBookmarklet();">
+    <div class='container'>
+        <div id='pushobj'>
+            <section class="login">
+                <h2>MyPage Dumper</h2>
+                <p>&quot;MyPage Dumper&quot; 是一個可提供線上自動化截取一切玩家們在Wacca MyPage中儲存的所有遊戲資料的工具，截取完畢後玩家們可以將打包好的資料下載儲存起來，以免將來MyPage終止後資料遺失！</p>
+                <p><a href="/">View in English</a></p>
+		<p><a href="/ja">日本語で見る</a></p>
+				        <p><a href="/ko">한국어로 보기</a></p>
+ 				<h2>如何使用</h2>
+				<ol>
+				<li><p>將此頁加入書籤.</p>
+				</li>
+				<li><p style="margin-bottom: 0;">複製以下指令：</p>
+				<p style="margin-top: 0"><input id="bookmarklet" type="text" readonly><button type="button" class="btn btn_pink" onclick="copyBookmarklet();">點我複製</button></p>
+				</li>
+				<li><p>修改第一步新增的書籤，將原本的書籤網址替換成剛剛複製的指令，儲存。</p>
+				</li>
+				<li><p><div><a class="btn btn_inferno" href="https://wacca.marv-games.jp/web/login/index" target="_blank">登入你的 Wacca MyPage</a></div></p>
+				</li>
+				<li><p>如果你已經登入進去至個人主頁內（可以進入BOX抽獎那邊），到下面點【登出】後再【登入】，但<strong>請停留在賬號選取畫面不要點選登入任何賬號！</strong></p>
+				</li>
+				<li><p>在賬號選取畫面，開啟剛剛製作修改好的書籤：</p>
+				<div class="information">
+					<div class="information__body info-update is-show panel">
+						<ul>
+						<li>PC, iOS: 打開書籤列表，找到您製作好的書籤並開啟。</li>
+						<li>Android: 在網址輸入區輸入您剛剛製作的書籤的名字，這時候推薦清單內會顯示這書籤，點擊開啟。</li>
+						</ul>
+					</div>
+				</div>
+				</li>
+				<li><p>如果以上步驟無誤，遊戲賬號的名字將會變成紅色。</p>
+				</li>
+				<li><p>這時候你可以像往常一樣選取賬號登入，按下賬號後系統會詢問您是否要打包資料，這時候請按【確定】</p>
+				</li>
+				<li><p>這時候系統就會將您導回這個網站，這時候網站就會自動開始把你的MyPage資料進行打包，你可以透過網頁上的進度條得知是否已經打包完成。</p>
+				</li>
+				<li><p>打包完成後，你將會看到你的遊戲名稱、等級和頭像，點擊下面的【下載】鍵就可下載打包好的資料。</p>
+				</li>
+				</ol>
+				<p>下載的資料內包含你所有的歌曲分數，最近遊玩歌曲，排行榜名次，解鎖的東西等。開發者們可以創建一個新的工具來將這些資料視覺化，但目前尚未有任何將此資料視覺化的工具，敬請期待。<strong>開發者資料可以透過<a href="https://github.com/YellowberryHN/mypage-dump/wiki" target="_blank">這邊</a>查閱.</strong></p>
+            </section>
+            <footer id="top">
+                <div id="footer">
+                    <hr />
+                    <div id="logo_copyright">
+                        <p>Created with &#x1F49B; by <a href="https://yello.ooo">Yellowberry</a>, <a href="https://twitter.com/JustACoalRock">Coal</a> and <a href="https://twitter.com/cindytrieuart">citrue</a></p>
+                    </div>
+            </footer>
+        </div>
+    </div>
+</body>
+
+</html>
