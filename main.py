@@ -26,7 +26,7 @@ magic = codecs.decode("nvzrVq","rot-13") # hi sega
 full_dump = True # dump play count
 check_valid = False # validate json output against schema
 
-extra_langs = ["ja", "ko"]
+extra_langs = ["ja", "ko", "zh_TW"]
 
 difficulty_dict = {
     "NORMAL": 0,
@@ -924,6 +924,11 @@ async def read_index_ja():
         return HTMLResponse(file.read(), status_code=200)
 
 @app.get("/ko")
-async def read_index_ja():
+async def read_index_ko():
     with open("frontend/index-ko.html", encoding="utf-8") as file:
+        return HTMLResponse(file.read(), status_code=200)
+
+@app.get("/zh_TW")
+async def read_index_zh_TW():
+    with open("frontend/index-zh_TW.html", encoding="utf-8") as file:
         return HTMLResponse(file.read(), status_code=200)
