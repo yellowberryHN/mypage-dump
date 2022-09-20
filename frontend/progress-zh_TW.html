@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MyPage Dumper</title>
+  <link href="/static/migrated.css" rel="stylesheet">
+  <meta http-equiv="Content-Language" content="zh-TW">
+  <link rel="shortcut icon" href="/static/favicon.ico">
+</head>
+
+<body>
+  <div id="progress-container">
+    <span id="step-text">進度</span>
+    <div class="progress-circle" id="progress1"></div>
+  </div>
+  
+  <div id="ui">
+    <div class='container'>
+      <div id='pushobj'>
+          <section class="login-select">
+              <h2>MyPage Dumper</h2>
+              <ul class="選擇遊戲賬號">
+                  <div class="btn login" data-iziModal-open="#modal_login0">
+                      <li>
+                          <div class="user-info__icon">
+                              <div class="user-info__icon__stage"></div>
+                              <div class="symbol__color__base">
+                                  <img src="/static/assets/color/303001.png" alt="symbol_color" id="color">
+                                  <div class="icon__image">
+                                      <img src="/static/assets/icon/102002.png" alt="icon" id="icon">
+                                  </div>
+                              </div>
+                          </div>
+                          <div class="user-info__detail">
+                              <div class="user-info__detail__wrap">
+                                  <div class="user-info__detail__lv" id="level">Lv.0</div>
+                                  <div class="user-info__detail__name" id="name">name</div>
+                              </div>
+                              <div class="user-info__detail__title" id="title">title</div>
+                              <div class="user-info__detail__wrap">
+                                  <div class="user-info__detail__wp">
+                                    <img src="/static/assets/rp.png" width="20">
+                                    <div id="points">0</div><span>RP</span>
+                                  </div>
+                              </div>
+                          </div>
+                      </li>
+                  </div>
+              </ul>
+          </section>
+          <section class="bottom_btn">
+              <ul>
+                  <li>
+                      <a onclick="downloadDump()">下載</a>
+                  </li>
+              </ul>
+          </section>
+      </div>
+  </div>
+  </div>
+
+  
+
+  <script src="https://cdn.rawgit.com/kimmobrunfeldt/progressbar.js/1.0.1/dist/progressbar.js"></script>
+  <script src="/static/script.js"></script>
+</body>
+
+</html>
