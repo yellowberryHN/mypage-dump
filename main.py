@@ -43,11 +43,14 @@ box_item_types = {
     "プレート": "plate"
 }
 
-def get_int(string):
+def get_int(string, replace=0):
     if any(char.isdigit() for char in string):
         return int(re.search(r'(\d+)', string).group(1))
     else:
-        raise TypeError(f"Integer not found in \"{string}\"")
+        if replace != None:
+            return replace
+        else:
+            raise TypeError(f"Integer not found in \"{string}\"")
 
 class DifficultyStats:
     def __init__(self, score, rating, achieve, play_count, leaderboard):
@@ -652,8 +655,8 @@ class User:
 
             friend_name = friend["data-friend_name"]
             friend_code = int(friend.form.input["value"])
-            friend_level = get_int(friend.div.select_one(".user-info__detail__lv").text)
-            friend_rate = int(friend.div.select_one(".rating__data").text)
+            friend_level = get_int(friend.div.select_one(".user-info__detail__lv").text, 0)
+            friend_rate = get_int(friend.div.select_one(".rating__data").text, 0)
             friend_icon = get_int(friend.div.select_one(".icon__image > img")["src"])
             friend_color = get_int(friend.div.select_one(".symbol__color__base > img")["src"])
 
