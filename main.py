@@ -847,7 +847,11 @@ users = {}
 def scrape_background(user_id, exists):
     users[user_id] = User(user_id, exists)
     if not exists:
-        users[user_id].scrape()
+        try:
+            users[user_id].scrape()
+        except:
+            sys.stderr.write(f"ISSUE DETECTED WITH USER {user_id}")
+            raise
 
 @app.post("/api/scrape/{lang}")
 async def scrape(lang: str="en", userId: str = Form(), background_tasks: BackgroundTasks = BackgroundTasks()):
