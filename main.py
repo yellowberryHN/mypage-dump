@@ -427,7 +427,7 @@ class User:
                 judgements.append(int(row_elements[row].select_one(".detail-table__score").text))
             timings = []
             for row in range(4,6):
-                timings.append(int(row_elements[row].select_one(".detail-table__score").text))
+                timings.append(get_int(row_elements[row].select_one(".detail-table__score").text, 0))
                 
             max_combo = int(song.select_one(".detail-table__score.combo .combo__num").text)
 
