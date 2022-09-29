@@ -896,6 +896,11 @@ async def download_file(id: str):
     else:
         return {"error": "File not found"}
 
+@app.get("/wacca_data.schema.json")
+async def read_schema():
+    with open("schema/wacca_data.schema.json", encoding="utf-8") as file:
+        return JSONResponse(file.read(), status_code=200)
+
 @app.get("/book.js")
 async def get_bookmarklet(lang: str="en"):
     filename = "book/bookmarklet.js"
