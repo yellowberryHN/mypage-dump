@@ -899,7 +899,7 @@ async def download_file(id: str):
 @app.get("/wacca_data.schema.json")
 async def read_schema():
     with open("schema/wacca_data.schema.json", encoding="utf-8") as file:
-        return JSONResponse(file.read(), status_code=200)
+        return FileResponse(file.read(), status_code=200, media_type='application/json')
 
 @app.get("/book.js")
 async def get_bookmarklet(lang: str="en"):
